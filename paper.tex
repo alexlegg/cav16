@@ -1,0 +1,28 @@
+\section{Introduction}
+
+Reactive systems are ubiquitous in real-world problems such as circuit design,
+industrial automation, or device drivers. Automatic synthesis can provide a
+\textit{correct by construction} controller for a reactive system from a
+specification.  However, the reactive synthesis problem is 2EXPTIME-complete so
+naive algorithms are infeasible on even simple systems.
+
+Reactive synthesis is formalised as a game between the \texit{system} and its
+\texit{environment}. In this work we focus on safety games, in which the system
+must prevent the environment from forcing the game into an error state. Much of
+the complexity of reactive synthesis stems from tracking the set of states in
+which a player is winning.
+
+There are several techniques that aim to mitigate this complexity by
+representing states symbolically.  Historically the most successful technique
+has been to use \texit{Binary Decision Diagrams} (BDDs).  BDDs efficiently
+represent a relation on a set of game variables but in the worst case the
+representation may be exponential. This means that BDDs are not a
+one-size-fits-all solution for all reactive synthesis specifications.
+
+Advances in SAT solving technology has prompted research into its applicability
+to synthesis as an alternative to BDDs. One approach is to find sets of states
+in CNF \cit{demiurge}. Another approach is to eschew states and focus on
+\texit{runs} of the game. Previous work has applied this idea to solving
+bounded games \cite{nina} by forming abstract trees of individual runs. In this
+paper, we extend this idea to unbounded games by constructing approximate sets
+of winning states from abstract trees.
