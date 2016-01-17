@@ -80,15 +80,29 @@ $(x_0, c_1, \pi^e(x_1, c_1)), (x_1, c_1, \pi^e(x_1, c_1)) \dots (x_n, c_n,
 therefore the existence of a controller strategy implies the nonexistence of an
 environment strategy and vice versa.
 
-A set of runs for a bounded game of rank $n$ can be represented by a \emph{game
-tree} of depth $n$ with states in the nodes and labels as edges. A
-\emph{strategy tree} similarly represents a strategy by restricting the edges
-in a game tree to obey $\pi^c$ for a controller strategy or $\pi^e$ for an
-environment strategy.
-
 \subsection{Abstract Game Trees}
 
-The bounded synthesis algorithm from \cite{nina} constructs abstractions of the
-game in the form of \emph{abstract game trees}. 
+A set of runs can be symbolically represented by a tree of labels. Each edge of
+the tree is either a \emph{fixed} valuation of controllable or uncontrollable
+variables, or it is \emph{unfixed} denoting any values are possible. Also, the
+tree must alternate between controllable and uncontrollable edges to reflect
+the alternating turns of the game. The entire set of runs of a bounded game of
+rank $n$ is symbolically represented by a tree of depth $2n$ and width 1
+populated by unfixed edges. Reducing the set of runs in a game forms an
+abstract game, which can be represented symbolically by an \emph{abstract game
+tree}.
+
+A strategy is equivalent to the set of all runs with the player's labels
+obeying the strategy mapping $\pi$. Therefore, a strategy can also be
+represented by a tree. Relaxing the restriction of the strategy mapping allows
+for a \emph{partial strategy} in which multiple labels are now possible for a
+single state.
+
+A strategy or partial strategy can also be thought of as an abstract game. A
+partial strategy for the controller is a restriction only on the controllable
+labels in the game. So if the environment can not win in the abstract game
+equivalent to the controller's partial strategy, then all strategies allowable
+by that partial strategy must be winning.
+
 
 \end{document}
