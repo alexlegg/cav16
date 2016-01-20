@@ -1,4 +1,7 @@
 \documentclass{llncs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\pagestyle{headings}
 
 \begin{document}
 
@@ -103,6 +106,48 @@ partial strategy for the controller is a restriction only on the controllable
 labels in the game. So if the environment can not win in the abstract game
 equivalent to the controller's partial strategy, then all strategies allowable
 by that partial strategy must be winning.
+
+\subsection{Solving Bounded Runs}
+
+An abstract game tree can be checked for a winning run by a SAT solver.  The
+tree must be encoded into CNF by making copies of the transition relation for
+each game step in tree. The formula must also check whether the error state has
+been reached in no branch/in all branches for the controller and environment
+respectively. The functions that produce these formulas are shown in Algorithm
+\ref{alg:treeFormula}.
+
+\begin{algorithm}
+    \caption{Tree formulas for Controller and Environment respectively}
+    \label{alg:treeFormula}
+    \begin{algorithmic}
+        \Function{treeFormula}{gt}
+        \If{$\Call{rank}{gt} == 0$}
+        \State \Return{ $\lnot \Call{E}{x^{gt}}$ }
+        \Else
+        \State \Return{ $\lnot \Call{E}{x^{gt}} \land \bigwedge_{n \in \Call{succ}{gt}}(\Call{$\delta$}{n} \land \Call{label}{n} \land \Call{treeFormula}{n})$ }
+        \EndIf
+        \EndFunction
+    \end{algorithmic}
+
+    \begin{algorithmic}
+        \Function{$\overline{treeFormula}$}{gt}
+        \If{$\Call{rank}{gt} == 0$}
+        \State \Return{\Call{E}{$x^{gt}$}}
+        \Else
+        \State \Return{ $\Call{E}{x^{gt}} \lor \bigvee_{n \in \Call{succ}{gt}}(\Call{$\delta$}{n} \land \Call{label}{n} \land \Call{$\overline{treeFormula}$}{n})$ }
+        \EndIf
+        \EndFunction
+    \end{algorithmic}
+\end{algorithm}
+
+When we produce a formula using $\textsc{treeFormula}$ the SAT solver is
+playing on behalf on the controller. Any unfixed labels, controllable or
+uncontrollable, in the tree will be existentially quantified. This means that
+if there exists a way for the game to be solved when both players cooperate the
+SAT solver will find it.
+
+\subsection{Counterexample Guided Bounded Synthesis}
+
 
 
 \end{document}
