@@ -53,18 +53,18 @@ Advances in SAT solving technology has prompted research into its applicability
 to synthesis as an alternative to BDDs. One approach is to find sets of states
 in CNF \cite{demiurge}. Another approach is to eschew states and focus on
 \emph{runs} of the game. Previous work has applied this idea to realizability
-of bounded games \cite{nina} by forming abstract representations of the game.
-In this paper, we extend this idea to unbounded games by constructing
-approximate sets of winning states from abstract trees.
+of bounded games \cite{narodytska2014} by forming abstract representations of
+the game.  In this paper, we extend this idea to unbounded games by
+constructing approximate sets of winning states from abstract trees.
 
 \section{Reactive Synthesis}
 
 A \emph{safety game}, $G = \langle X, L_c, L_u, \delta, I, E, \rangle$,
-consists of a set of state variables, sets of controllable and uncontrollable
-label variables, a transition relationship $\delta : (X, L_c, L_u) \to X$, an
-initial state, and an error state. The \emph{controller} and \emph{environment}
-players choose controllable and uncontrollable labels respectively and the game
-proceeds according to $\delta$. 
+consists of a set of boolean state variables, sets of controllable and
+uncontrollable label variables, a transition relationship $\delta : (X, L_c,
+L_u) \to X$, an initial state, and an error state. The \emph{controller} and
+\emph{environment} players choose controllable and uncontrollable labels
+respectively and the game proceeds according to $\delta$. 
 
 An \emph{run} of a game $(x_0, c_0, u_0), (x_1, c_1, u_1) \dots (x_n, c_n,
 u_n)$ is a chain of state and label pairs of length $n$ s.t.  $x_{k+1}
@@ -113,11 +113,11 @@ equivalent to the controller's partial strategy, then all strategies allowable
 by that partial strategy must be winning.
 
 An abstract game tree can be checked for the existence of a winning run by a
-SAT solver.  The tree must be encoded into CNF by making copies of the
-transition relation for each game step in tree. The formula must also check
-whether the error state has been reached in no branch/in all branches for the
-controller and environment respectively. The functions that produce these
-formulas are shown in Algorithm \ref{alg:treeFormula}.
+SAT solver\cite{narodytska2014}.  The tree must be encoded into CNF by making
+copies of the transition relation for each game step in tree. The formula must
+also check whether the error state has been reached in no branch/in all
+branches for the controller and environment respectively. The functions that
+produce these formulas are shown in Algorithm \ref{alg:treeFormula}.
 
 \begin{algorithm}
     \caption{Tree formulas for Controller and Environment respectively}
@@ -161,18 +161,19 @@ then we have a counterexample that proves that the controller strategy is not
 winning. This forms the basis of a counterexample guided abstraction refinement
 framework that operates on candidate strategies.
 
-Synthesis begins with an empty game as seen in Figure \ref{fig:emptytree}.
-Initially we are playing on behalf of the environment because it chooses the
-first move in each step. The empty game is passed to the SAT solver, which
-searches for a candidate environment strategy.  If a candidate is found (Figure
-\ref{fig:candidate}) then it is checked for a spoiling strategy by solving for
-the controller. If no spoiling strategy exists, that means our candidate is a
-winning strategy and the algorithm terminates.  Otherwise we find a
-counterexample (Figure \ref{fig:cex}), which is used to refine the empty game
-tree to include the first move from the controller's spoiling strategy (Figure
-\ref{fig:refined}.  The algorithm continues by finding a new candidate for the
-environment (Figure \ref{fig:candidate2}), and a new counterexample to refine
-the game abstraction once again (Figure \ref{fig:refined2}).
+The bounded synthesis algorithm described in \cite{narodytska2014} begins with
+an empty game as seen in Figure \ref{fig:emptytree}.  Initially we are playing
+on behalf of the environment because it chooses the first move in each step.
+The empty game is passed to the SAT solver, which searches for a candidate
+environment strategy.  If a candidate is found (Figure \ref{fig:candidate})
+then it is checked for a spoiling strategy by solving for the controller.  If
+no spoiling strategy exists, that means our candidate is a winning strategy and
+the algorithm terminates.  Otherwise we find a counterexample (Figure
+\ref{fig:cex}), which is used to refine the empty game tree to include the
+first move from the controller's spoiling strategy (Figure \ref{fig:refined}.
+The algorithm continues by finding a new candidate for the environment (Figure
+\ref{fig:candidate2}), and a new counterexample to refine the game abstraction
+once again (Figure \ref{fig:refined2}).
 
 
 \tikzset{every node/.style={solid}}
@@ -254,5 +255,46 @@ the game abstraction once again (Figure \ref{fig:refined2}).
     \end{subfigure}
     \caption{Abstract game trees}
 \end{figure}
+
+\section{Unbounded Synthesis}
+
+Bounded synthesis can be used to prove the existence of a winning strategy for
+the environment by providing a witness. For the controller, the strongest claim
+that can be made is that the strategy is winning as long as the game does not
+extend longer than the bound.
+
+In model checking the maximum bound is decided based on the states of the game
+\cite{biere1999}. The na\"ive approach is to use size of the state space as the
+bound ($2^{|X|}$). With a bound of this size all states may be explored. One
+optimisation is to use the diameter of the game, which is the smallest number
+$d$ such that for any state $x$ there is a path of length $\leq d$ to all other
+reachable states. However, for large games these bounds are intractable.
+
+When performing model checking or synthesis with BDDs \cite{burch1990} the set
+of states that are winning for the environment is iteratively constructed by
+computing the states from which the environment can force the game into the
+previous winning set. Eventually this process reaches a fixed point and the
+total set of environment winning states is known.
+
+A similar concept can be applied to the bounded synthesis algorithm to
+iteratively increase the bound of the game and terminate when a fixed point is
+reached. When a strategy is found to be winning on an abstract game tree, we
+record as winning the states from which the opponent could find no
+counterexample. To find these states we use interpolation of subformulas of the
+game tree.
+
+\subsection{Learning States with Interpolants}
+
+Given two formulas $A$ and $B$ such that $A \land B$ is unsatisfiable, it is
+possible to construct and interpolant $\mathcal{I}$ such that $A \to
+\mathcal{I}$, $B \land \mathcal{I}$ is unsatisfiable, and $\mathcal{I}$ refers
+only to the intersection of variables in $A$ and $B$. An interpolant can be
+constructed efficiently from a resolution proof of the unsatisfiability of $A
+\land B$ \cite{pudlak1997}.
+
+
+
+\bibliographystyle{splncs03}
+\bibliography{paper}
 
 \end{document}
