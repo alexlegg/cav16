@@ -6,6 +6,9 @@
 \usepackage{tikz}
 \usetikzlibrary{trees}
 
+\algnewcommand{\IIf}[1]{\State\algorithmicif\ #1\ \algorithmicthen}
+\algnewcommand{\EndIIf}{}
+
 \pagestyle{headings}
 
 \begin{document}
@@ -25,7 +28,15 @@
 \maketitle
 
 \begin{abstract}
-    This is the abstract
+
+    Reactive synthesis techniques based on image computations have been shown
+    to work well in many cases but suffer from state explosion in others.
+    A different approach applies SAT solvers in a counterexample guided framework but
+    is limited to bounded synthesis.  We present an extension of this technique
+    to unbounded synthesis by employing interpolation.  Experimental results
+    show this to be a promising alternative that solves some previously
+    intractable instances.
+
 \end{abstract}
 
 \section{Introduction}
@@ -59,46 +70,49 @@ constructing approximate sets of winning states from abstract trees.
 
 \section{Reactive Synthesis}
 
-A \emph{safety game}, $G = \langle X, L_c, L_u, \delta, I, E, \rangle$,
-consists of a set of boolean state variables, sets of controllable and
-uncontrollable label variables, a transition relationship $\delta : (X, L_c,
-L_u) \to X$, an initial state, and an error state. The \emph{controller} and
+A \emph{safety game}, $G = \langle X, L_u, L_c, \delta, I, E, \rangle$,
+consists of a set of boolean state variables, sets of uncontrollable and
+controllable label variables, a transition relationship $\delta : (X, L_u, L_c)
+\to X$, an initial state, and an error state. The \emph{controller} and
 \emph{environment} players choose controllable and uncontrollable labels
 respectively and the game proceeds according to $\delta$. 
 
-An \emph{run} of a game $(x_0, c_0, u_0), (x_1, c_1, u_1) \dots (x_n, c_n,
-u_n)$ is a chain of state and label pairs of length $n$ s.t.  $x_{k+1}
-\leftarrow \delta(x_k, c_k, u_k)$. A run is winning for the controller if $x_0
+An \emph{run} of a game $(x_0, u_0, c_0), (x_1, u_1, c_1) \dots (x_n, u_n,
+c_n)$ is a chain of state and label pairs of length $n$ s.t.  $x_{k+1}
+\leftarrow \delta(x_k, u_k, c_k)$. A run is winning for the controller if $x_0
 = I \land \forall i \in \{1..n\} (x_i \neq E)$. In a bounded game of rank $n$
 all runs are restricted to length $n$, whereas unbounded games consider runs of
-infinite length.
+infinite length. Since we consider only deterministic games a run is equivalent
+to a list of assignments to $L_c$ and $L_u$.
 
-A \emph{controller strategy} $\pi^c : X \to L_c$ is a mapping of states to
-controllable labels. A controller strategy is winning in a bounded game of rank
-$n$ if all runs $(x_0, \pi^c(x_0), u_0), (x_1, \pi^c(x_1), u_1) \dots (x_n,
-\pi^c(x_n), u_n)$ are winning. Bounded \emph{realizability} is the problem of
-determining the existence of such a strategy for a bounded game.
+A \emph{controller strategy} $\pi^c : (X, L_u) \to L_c$ is a mapping of states
+and uncontrollable inputs to controllable labels. A controller strategy is
+winning in a bounded game of rank $n$ if all runs $(x_0, u_0, \pi^c(x_0, u_0)),
+(x_1, u_1, \pi^c(x_1, u_1)) \dots (x_n, u_n, \pi^c(x_n, u_n))$ are winning.
+Bounded \emph{realizability} is the problem of determining the existence of
+such a strategy for a bounded game.
 
-An \emph{environment strategy} $\pi^e : (X, L_c) \to L_u$ is a mapping of
-states and controllable labels to uncontrollable labels. A bounded run is
-winning for the environment if $x_0 = I \land \exists i \in \{1..n\} (x_i = E)$
-and an environment strategy is winning for a bounded game if there exists a run
-$(x_0, c_1, \pi^e(x_1, c_1)), (x_1, c_1, \pi^e(x_1, c_1)) \dots (x_n, c_n,
-\pi^e(x_n, c_n))$ that wins for the environment. Safety games are zero sum,
-therefore the existence of a controller strategy implies the nonexistence of an
-environment strategy and vice versa.
+An \emph{environment strategy} $\pi^e : X \to L_u$ is a mapping of states to
+uncontrollable labels. A bounded run is winning for the environment if $x_0
+= I \land \exists i \in \{1..n\} (x_i = E)$ and an environment strategy is
+winning for a bounded game if there exists a run $(x_0, \pi^e(x_1), c_1), (x_1,
+\pi^e(x_1), c_1) \dots (x_n, \pi^e(x_n), c_n)$ that wins for the environment.
+Safety games are zero sum, therefore the existence of a controller strategy
+implies the nonexistence of an environment strategy and vice versa.
 
 \subsection{Abstract Game Trees}
 
-A set of runs can be symbolically represented by a tree of labels. Each edge of
-the tree is either a \emph{fixed} valuation of controllable or uncontrollable
-variables, or it is \emph{unfixed} denoting any values are possible. Also, the
-tree must alternate between controllable and uncontrollable edges to reflect
-the alternating turns of the game. The entire set of runs of a bounded game of
-rank $n$ is symbolically represented by a tree of depth $2n$ and width 1
-populated by unfixed edges. Reducing the set of runs in a game forms an
-abstract game, which can be represented symbolically by an \emph{abstract game
-tree}.
+A set of runs can be represented symbolically by a tree of valuations to
+controllable and uncontrollable label variables where valuations are allowed to
+be \emph{unfixed}. An unfixed value symbolically represents all possible
+valuations. Formally, we define the tree as a set of lists of label valuations
+and a node in the tree may be identified by the list made by following the path
+from the root.
+
+The entire set of runs of a bounded game of rank $n$ is
+symbolically represented by a tree of depth $2n$ and width 1 populated by
+unfixed edges.  Reducing the set of runs in a game forms an abstract game,
+which can be represented symbolically by an \emph{abstract game tree}.
 
 A strategy is equivalent to the set of all runs with the player's labels
 obeying the strategy mapping $\pi$. Therefore, a strategy can also be
@@ -256,6 +270,47 @@ once again (Figure \ref{fig:refined2}).
     \caption{Abstract game trees}
 \end{figure}
 
+\begin{algorithm}
+    \begin{algorithmic}
+        \Function{solveAbstract}{$\langle s, r \rangle , gt$}
+        \State $cand \gets $ \Call{findCandidate}{$\langle s, r \rangle, gt$}
+        \IIf{$r = n - 1$} \Return $cand$ \EndIIf 
+        \State $gt' \gets gt$
+        \Loop
+            \IIf{$cand = \emptyset $} \Return $\emptyset $ \EndIIf
+            \State $cex \gets $ \Call{verify}{$\langle s, r \rangle, gt, cand$}
+            \IIf{$cex = NULL$} \Return $cand$ \EndIIf
+            \State $gt' \gets gt' \cup cex$
+%%%            \State $gt' \gets \Call{refine}{gt', cex}$
+            \State $cand \gets $ \Call{solveAbstract}{$\langle s, r \rangle, gt'$}
+        \EndLoop
+        \EndFunction
+    \end{algorithmic}
+
+%%%    \begin{algorithmic}
+%%%        \Function{refine}{$gt, \langle leaf, spoiling \rangle$}
+%%%            \State \Return $gt \cup \{leaf, spoiling\}$
+%%%        \EndFunction
+%%%    \end{algorithmic}
+
+    \begin{algorithmic}
+        \Function{findCandidate}{$\langle s, r \rangle, T$}
+            \State $\hat{T} \gets \Call{gtExtend}{T}$
+            \State $fml \gets $ \Call{treeFormula}{$\hat{T}$}
+            \State $sol \gets $ \Call{SAT}{$s(X_T) \land fml$}
+        \EndFunction
+    \end{algorithmic}
+
+    \begin{algorithmic}
+        \Function{verify}{$\langle r, s\rangle, gt, cand$}
+            \For{$l \in leaves(gt)$}
+                \State $\langle r', s'\rangle \gets $ \Call{outcome}{$\langle r, s\rangle, gt, l$}
+                \State $spoiling \gets $ \Call{solveAbstract}{$\langle r', s' \rangle, \emptyset$}
+            \EndFor
+        \EndFunction
+    \end{algorithmic}
+\end{algorithm}
+
 \section{Unbounded Synthesis}
 
 Bounded synthesis can be used to prove the existence of a winning strategy for
@@ -292,6 +347,94 @@ only to the intersection of variables in $A$ and $B$. An interpolant can be
 constructed efficiently from a resolution proof of the unsatisfiability of $A
 \land B$ \cite{pudlak1997}.
 
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
+        \node [] (root){}
+            child {node [circle,draw,label=left:$x_1$] {}
+                child {node [circle,draw] {}
+                    child {node [circle,draw,label=left:$x_0^0$] {} edge from parent[unfixed]}
+                    edge from parent [fixed] node [left] {$u_1$}
+                }
+                child {node [circle,draw] {} edge from parent[unfixed]
+                    child {node [circle,draw,label=right:$x_0^1$] {} edge from parent[unfixed]}
+                    edge from parent [fixed] node [right] {$u_2$}
+                }
+                edge from parent [unfixed]
+            };
+    \end{tikzpicture}
+%%%    \begin{tikzpicture}[overlay]
+%%%        \draw [rotate = -20] (-1.9,0.35) ellipse (0.7 and 1.3);
+%%%    \end{tikzpicture}
+    \caption{A controller-losing game tree}
+    \label{fig:interpolatetree}
+\end{figure}
+
+Consider the snippet of a game tree in Figure \ref{fig:interpolatetree}. The
+tree is losing for the controller, the node labelled $x_1$ is at rank 1, and
+$x_0^0$ and $x_0^1$ are at rank 0. Since the tree is controller-losing we know
+that at least one run represented by the tree contains the error state.  As
+a result, $\textsc{treeFormula}(gt)$ is unsatisfiable. If we take the step
+$x_1$ to $x_0^0$ and cut it from the rest of the tree then
+$\textsc{treeFormula}(step) \land \textsc{treeFormula}(parent)$ must still be
+unsatisfiable.
+
+We can construct an interpolant with $A = \textsc{treeFormula}(parent)$ and $B
+= \textsc{treeFormula}(step)$. The only variables shared between $A$ and $B$
+are the state variables at $x_1$. We know that $B \land \mathcal{I}$ is
+unsatisfiable, therefore all states in $\mathcal{I}$ must lose to the
+uncontrollable label $u_1$. We also know that $A \to \mathcal{I}$, thus
+$\mathcal{I}$ contains all states reachable by the parent tree (on runs that
+avoid the error state.)
+
+\begin{algorithm}
+    \caption{Amended tree formulas for Controller and Environment respectively}
+    \label{alg:treeFormula}
+    \begin{algorithmic}
+        \Function{treeFormula}{gt}
+        \If{$\Call{rank}{gt} == 0$}
+        \State \Return{ $\lnot \Call{$L^c$}{x^{gt}}$ }
+        \Else
+        \State \Return{ $\lnot \Call{$L^c$}{x^{gt}} \land \bigwedge_{n \in \Call{succ}{gt}}(\Call{$\delta$}{n} \land \Call{label}{n} \land \Call{treeFormula}{n})$ }
+        \EndIf
+        \EndFunction
+    \end{algorithmic}
+
+    \begin{algorithmic}
+        \Function{$\overline{treeFormula}$}{gt}
+        \If{$\Call{rank}{gt} == 0$}
+        \State \Return{\Call{E}{$x^{gt}$}}
+        \Else
+        \State \Return{ $\Call{$L^e[rank(gt)]$}{x^{gt}} \land$ \\
+            $(\Call{E}{x^{gt}} \lor \bigvee_{n \in \Call{succ}{gt}}(\Call{$\delta$}{n} \land \Call{label}{n} \land \Call{$\overline{treeFormula}$}{n}))$ }
+        \EndIf
+        \EndFunction
+    \end{algorithmic}
+\end{algorithm}
+
+Now we can consider the step $x_1$ to $x_0^1$, and the parent - now without
+either $x_1 \to x_0^0$ or $x_1 \to x_0^1$. The formula
+$(\textsc{treeFormula}(parent) \land \mathcal{I}) \land
+\textsc{treeFormula}(step)$ must be unsatisfiable. $\mathcal{I}$ contains all
+states that lose to $u_1$ so any other state reachable at $x_1$ must lose to
+$u_2$. Therefore we can compute another interpolant that contains states that
+lose to $u_2$.
+
+This is the foundation for a recursive algorithm that consumes an entire tree
+by removing a single step on each iteration. All learned states from which the
+controller must lose are recorded in a set $L^c$.  This algorithm can also be
+performed on environment-losing trees with the caveat that any state learnt at
+a node of rank $n$ is only known to lose at ranks less than or equal to $n$. 
+
+\subsection{Proof of Termination}
+
+\subsection{Algorithm}
+
+\section{Evaluation}
+
+\section{Related Work}
+
+\section{Conclusion}
 
 
 \bibliographystyle{splncs03}

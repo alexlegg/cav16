@@ -21,3 +21,20 @@ Hybrid solver
 
 Evaluation
 
+beats demiurge for:
+    NEW: realizability/amba4match5.aag
+    NEW: realizability/driver_d10y.aag
+    NEW: realizability/driver_a7n.aag
+    NEW: realizability/driver_b8y.aag
+    NEW: realizability/driver_a8n.aag
+    NEW: realizability/amba5match5.aag
+    NEW: realizability/amba6match5.aag
+    NEW: realizability/driver_d8y.aag
+    NEW: realizability/driver_c10n.aag
+    NEW: realizability/amba7match5.aag
+    NEW: realizability/driver_b10y.aag
+    NEW: realizability/6s210b037_c0to31.aag
+    NEW: realizability/6s216rb0_c0to31.aag
+    NEW: realizability/driver_b7y.aag
+    NEW: realizability/driver_c8n.aag
+
