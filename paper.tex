@@ -12,35 +12,42 @@
 \MakeRobust{\Call}
 \newcommand{\True}{\texttt{true}}
 \newcommand{\False}{\texttt{false}}
+\newcommand{\II}{\mathcal{I}}
 \newcommand{\textoverline}[1]{$\overline{\mbox{#1}}$}
 
 \pagestyle{headings}
 
 \begin{document}
 
-\title{Untitled CAV Paper}
+\title{A SAT-Based Counterexample Guided Method for Unbounded Synthesis}
 
 \author{Alexander Legg\inst{1} 
-    \and Leonid Ryzhyk\inst{2}
-    \and Nina Narodytska\inst{2}}
+    \and Nina Narodytska\inst{2}
+    \and Leonid Ryzhyk\inst{2}}
 
 \institute{NICTA\thanks{NICTA is funded by the Australian Government as represented by the Department of Broadband,
     Communications and the Digital Economy and the Australian Research Council through the ICT
     Centre of Excellence program.} and UNSW \\
     \email{alexander.legg@nicta.com.au}
-    \and Samsung Research}
+    \and Samsung Research America}
 
 \maketitle
 
 \begin{abstract}
 
-    Reactive synthesis techniques based on image computations have been shown
-    to work well in many cases but suffer from state explosion in others.
-    A different approach applies SAT solvers in a counterexample guided framework but
-    is limited to bounded synthesis.  We present an extension of this technique
-    to unbounded synthesis by employing interpolation.  Experimental results
-    show this to be a promising alternative that solves some previously
-    intractable instances.
+    Reactive synthesis techniques based on constructing the winning region of
+    the system have been shown to work well in many cases but suffer from state
+    explosion in others.  A different approach, proposed recently, applies SAT
+    solvers in a counterexample guided framework to solve the synthesis
+    problem.  However, this method is limited to synthesising systems that
+    execute for a bounded number of steps and is incomplete for synthesis with
+    unbounded safety and reachability objectives.  We present an extension of
+    this technique to unbounded synthesis.  Our method applies Craig
+    interpolation to abstract game trees produced by counterexample-guided
+    search in order to construct a monotonic sequence of may-losing regions.
+    Experimental results based on SYNTCOMP 2015 competition benchmarks show
+    this to be a promising alternative that solves some previously intractable
+    instances.
 
 \end{abstract}
 
@@ -141,7 +148,7 @@ produce these formulas are shown in Algorithm \ref{alg:treeFormula}.
 \begin{algorithm}
     \caption{Tree formulas for Controller and Environment respectively}
     \label{alg:treeFormula}
-    \begin{algorithmic}
+    \begin{algorithmic}[1]
         \Function{treeFormula}{gt}
         \If{$\Call{rank}{gt} == 0$}
         \State \Return{ $\lnot \Call{E}{x^{gt}}$ }
@@ -149,9 +156,11 @@ produce these formulas are shown in Algorithm \ref{alg:treeFormula}.
         \State \Return{ $\lnot \Call{E}{x^{gt}} \land \bigwedge_{n \in \Call{succ}{gt}}(\Call{$\delta$}{n} \land \Call{label}{n} \land \Call{treeFormula}{n})$ }
         \EndIf
         \EndFunction
+        \algstore{tf1}
     \end{algorithmic}
 
-    \begin{algorithmic}
+    \begin{algorithmic}[1]
+        \algrestore{tf1}
         \Function{\textoverline{treeFormula}}{gt}
         \If{$\Call{rank}{gt} == 0$}
         \State \Return{\Call{E}{$x^{gt}$}}
@@ -180,17 +189,21 @@ then we have a counterexample that proves that the controller strategy is not
 winning. This forms the basis of a counterexample guided abstraction refinement
 framework that operates on candidate strategies.
 
-The bounded synthesis algorithm described in \cite{narodytska2014} begins with
-an empty game as seen in Figure \ref{fig:emptytree}.  Initially we are playing
-on behalf of the environment because it chooses the first move in each step.
-The empty game is passed to the SAT solver, which searches for a candidate
-environment strategy.  If a candidate is found (Figure \ref{fig:candidate})
-then it is checked for a spoiling strategy by solving for the controller.  If
-no spoiling strategy exists, that means our candidate is a winning strategy and
-the algorithm terminates.  Otherwise we find a counterexample (Figure
-\ref{fig:cex}), which is used to refine the empty game tree to include the
-first move from the controller's spoiling strategy (Figure \ref{fig:refined}.
-The algorithm continues by finding a new candidate for the environment (Figure
+This technique was proposed by Narodytska et al \cite{narodytska2014}. In
+Section \ref{sect:unbounded} we propose an extension to synthesis of unbounded
+games.
+
+The bounded synthesis algorithm begins with an empty game as seen in Figure
+\ref{fig:emptytree}.  Initially we are playing on behalf of the environment
+because it chooses the first move in each step.  The empty game is passed to
+the SAT solver, which searches for a candidate environment strategy.  If a
+candidate is found (Figure \ref{fig:candidate}) then it is checked for a
+spoiling strategy by solving for the controller.  If no spoiling strategy
+exists, that means our candidate is a winning strategy and the algorithm
+terminates.  Otherwise we find a counterexample (Figure \ref{fig:cex}), which
+is used to refine the empty game tree to include the first move from the
+controller's spoiling strategy (Figure \ref{fig:refined}.  The algorithm
+continues by finding a new candidate for the environment (Figure
 \ref{fig:candidate2}), and a new counterexample to refine the game abstraction
 once again (Figure \ref{fig:refined2}). The full algorithm is listed in
 Algorithm \ref{alg:bounded}.
@@ -278,7 +291,7 @@ Algorithm \ref{alg:bounded}.
 
 
 \begin{algorithm}
-    \begin{algorithmic}
+    \begin{algorithmic}[1]
         \Function{solveAbstract}{$\langle s, r \rangle , T$}
         \State $cand \gets $ \Call{findCandidate}{$\langle s, r \rangle, T$} \Comment{Look for a candidate}
         \IIf{$r = n - 1$} \Return $cand$ \EndIIf \Comment{Reached the bound}
@@ -291,23 +304,26 @@ Algorithm \ref{alg:bounded}.
             \State $cand \gets $ \Call{solveAbstract}{$\langle s, r \rangle, T'$} \Comment{Solve refined AGT}
         \EndLoop
         \EndFunction
+        \algstore{b1}
     \end{algorithmic}
 
     \begin{algorithmic}
+        \algrestore{b1}
         \Function{findCandidate}{$\langle s, r \rangle, T$}
             \State $sol \gets $ \Call{SAT}{$s(X_T) \land$ \Call{treeFormula}{$T$} }
             \IIf{$sol = \texttt{unsat}$} 
                 \Return $\emptyset$ \Comment{No candidate exists}
             \EndIIf
-%%%            \Else \unskip\ 
             \State \Return $\{ \langle n, c \rangle | n \in $ \Call{gtNodes}{T} $, c = \Call{sol}{n} \}$ \Comment{Fix candidate moves in $T$}
         \EndFunction
+        \algstore{b2}
     \end{algorithmic}
 
     \begin{algorithmic}
-        \Function{verify}{$\langle r, s\rangle, gt, cand$}
+        \algrestore{b2}
+        \Function{verify}{$\langle s, r\rangle, gt, cand$}
             \For{$l \in leaves(gt)$}
-            \State $\langle r', s'\rangle \gets $ \Call{outcome}{$\langle r, s\rangle, gt, l$} \Comment{Get rank and state at leaf}
+            \State $\langle r', s'\rangle \gets $ \Call{outcome}{$\langle s, r\rangle, gt, l$} \Comment{Get rank and state at leaf}
                 \State $u \gets $ \Call{\textoverline{solveAbstract}}{$\langle r', s' \rangle, \emptyset$} \Comment{Solve for the opponent}
                 \IIf{$u \neq \emptyset$} \Return $\langle \False, l, u \rangle$ \EndIIf \Comment{Return counterexample}
             \EndFor
@@ -315,12 +331,13 @@ Algorithm \ref{alg:bounded}.
         \EndFunction
     \end{algorithmic}
 
-
     \caption{Bounded Synthesis}
     \label{alg:bounded}
 \end{algorithm}
 
 \section{Unbounded Synthesis}
+
+\label{sect:unbounded}
 
 Bounded synthesis can be used to prove the existence of a winning strategy for
 the environment by providing a witness. For the controller, the strongest claim
@@ -397,24 +414,68 @@ $\mathcal{I}$ contains all states reachable by the parent tree (on runs that
 avoid the error state.)
 
 \begin{algorithm}
+    \begin{algorithmic}[1]
+        \Require $\sigma(X_T) \land $ \Call{treeFormula}{$T$} $\equiv \bot$
+        \Require \emph{Must-invariant} holds
+        \Ensure \emph{Must-invariant} holds
+        \Ensure $\sigma(X_T) \land B^M \equiv \bot$
+        \Function{learn}{$\sigma, T$}
+            \IIf{$T = \emptyset$}
+                \Return
+            \EndIIf
+            \State $n \gets $ non-leaf node with max rank
+            \State $\langle T_1, T_2 \rangle \gets $ \Call{gtSplit}{$T, n$}
+            \State $\mathcal{I} \gets $ \Call{interpolate}{$\sigma(X_T) \land $ \Call{treeFormula}{$T_1$}, \Call{treeFormula}{$T_2$}}
+            \State $B^M \gets B^M \lor \mathcal{I}$
+            \State \Call{learn}{$\sigma, T_1$}
+        \EndFunction
+        \algstore{learn}
+    \end{algorithmic}
+    
+    \begin{algorithmic}[1]
+        \algrestore{learn}
+        \Require $\sigma(X_T) \land $ \Call{\textoverline{treeFormula}}{$T$} $\equiv \bot$
+        \Require \emph{May-invariant} holds
+        \Ensure \emph{May-invariant} holds
+        \Ensure $\sigma(X_T) \land B^m[$\Call{rank}{$T$}$] \equiv \bot$
+        \Function{\textoverline{learn}}{$\sigma, T$}
+            \IIf{$T = \emptyset$}
+                \Return
+            \EndIIf
+            \State $n \gets $ non-leaf node with max rank
+            \State $\langle T_1, T_2 \rangle \gets $ \Call{gtSplit}{$T, n$}
+            \State $\mathcal{I} \gets $ \Call{interpolate}{$\sigma(X_T) \land $ \Call{\textoverline{treeFormula}}{$T_1$}, \Call{\textoverline{treeFormula}}{$T_2$}}
+            \For{$i = 1$ to \Call{rank}{$n$}}
+                \State $B^m[i] \gets B^m[i] \land \lnot \mathcal{I}$
+            \EndFor
+            \State \Call{\textoverline{learn}}{$\sigma, T_1$}
+        \EndFunction
+    \end{algorithmic}
+    \caption{Learning algorithms}
+    \label{alg:learn}
+\end{algorithm}
+
+\begin{algorithm}
     \caption{Amended tree formulas for Controller and Environment respectively}
     \label{alg:treeFormula}
-    \begin{algorithmic}
+    \begin{algorithmic}[1]
         \Function{treeFormula}{gt}
         \If{$\Call{rank}{gt} == 0$}
-        \State \Return{ $\lnot \Call{$L^c$}{x^{gt}}$ }
+        \State \Return{ $\lnot \Call{$B^M$}{x^{gt}}$ }
         \Else
-        \State \Return{ $\lnot \Call{$L^c$}{x^{gt}} \land \bigwedge_{n \in \Call{succ}{gt}}(\Call{$\delta$}{n} \land \Call{label}{n} \land \Call{treeFormula}{n})$ }
+        \State \Return{ $\lnot \Call{$B^M$}{x^{gt}} \land \bigwedge_{n \in \Call{succ}{gt}}(\Call{$\delta$}{n} \land \Call{label}{n} \land \Call{treeFormula}{n})$ }
         \EndIf
         \EndFunction
+        \algstore{tf2}
     \end{algorithmic}
 
     \begin{algorithmic}
-        \Function{$\overline{treeFormula}$}{gt}
+        \algrestore{tf2}
+        \Function{\textoverline{treeFormula}}{gt}
         \If{$\Call{rank}{gt} == 0$}
         \State \Return{\Call{E}{$x^{gt}$}}
         \Else
-        \State \Return{ $\Call{$L^e[rank(gt)]$}{x^{gt}} \land$ \\
+        \State \Return{ $\Call{$B^m[rank(gt)]$}{x^{gt}} \land$ \\
             $(\Call{E}{x^{gt}} \lor \bigvee_{n \in \Call{succ}{gt}}(\Call{$\delta$}{n} \land \Call{label}{n} \land \Call{$\overline{treeFormula}$}{n}))$ }
         \EndIf
         \EndFunction
@@ -430,24 +491,159 @@ $u_2$. Therefore we can compute another interpolant that contains states that
 lose to $u_2$.
 
 This is the foundation for a recursive algorithm that consumes an entire tree
-by removing a single step on each iteration. All learned states from which the
-controller must lose are recorded in a set $L^c$.  This algorithm can also be
-performed on environment-losing trees with the caveat that any state learnt at
-a node of rank $n$ is only known to lose at ranks less than or equal to $n$. 
+by removing a single step on each iteration (Algorithm \ref{alg:learn}). All
+learned states from which the controller \emph{must} lose are recorded in a set
+of \emph{bad} states $B^M$.  This algorithm can also be performed on
+environment-losing trees with the caveat that any state learnt at a node of
+rank $n$ is only known to lose at ranks less than or equal to $n$. We negate
+the interpolants we learn this way and record them in a mapping of ranks to
+sets of states $B^m$ which \emph{may} be bad states for the controller.
 
-%%%\begin{algorithm}
-%%%    \caption{Unbounded Synthesis}
-%%%    \label{alg:unbounded}
-%%%    \begin{algorithmic}
-%%%    \end{algorithmic}
+\begin{algorithm}
+    \begin{algorithmic}[1]
+        \Function{solveUnbounded}{$T$}
+            \State $B^M \gets E$
+            \State $B^m[0] \gets E$
+            \For{$k = 1 \dots$}
+                \IIf{\Call{SAT}{$I \land B^M$}}
+                    \Return \texttt{unrealisable} \Comment{Losing in the initial state}
+                \EndIIf
+                \IIf{$\exists i \  B^m[i] \equiv B^m[i+1]$}
+                    \Return \texttt{realisable} \Comment{Reached fixed point}
+                \EndIIf
+                \State $B^m[k] \gets \top$
+                \State \Call{solveAbstract}{$\langle I, k \rangle, \emptyset$}
+            \EndFor
+        \EndFunction
+        \algstore{u1}
+    \end{algorithmic}
 
-%%%    \begin{algorithmic}
-%%%    \end{algorithmic}
-%%%\end{algorithm}
+    \begin{algorithmic}
+        \algrestore{u1}
+        \Function{solveAbstract}{$\langle s, r \rangle , T$}
+        \State $cand \gets $ \Call{findCandidate}{$\langle s, r \rangle, T$} \Comment{Look for a candidate}
+        \IIf{$r = n - 1$} \Return $cand$ \EndIIf \Comment{Reached the bound}
+        \State $T' \gets T$
+        \Loop
+            \IIf{$cand = \emptyset $} \Return $\emptyset $ \EndIIf \Comment{No candidate: return with no solution}
+            \State $\langle cex, l, u \rangle \gets $ \Call{verify}{$\langle s, r \rangle, T, cand$} \Comment{Verify candidate}
+            \IIf{$cex = \False$} \Return $cand$ \EndIIf \Comment{No counterexample: return candidate}
+            \State $T' \gets $ \Call{gtAppend}{$T', l, u$} \Comment{Refine AGT with counterexample}
+            \State $cand \gets $ \Call{solveAbstract}{$\langle s, r \rangle, T'$} \Comment{Solve refined AGT}
+        \EndLoop
+        \EndFunction
+        \algstore{u2}
+    \end{algorithmic}
+
+    \begin{algorithmic}
+        \algrestore{u2}
+        \Function{findCandidate}{$\langle s, r \rangle, T$}
+            \State $sol \gets $ \Call{SAT}{$s(X_T) \land$ \Call{treeFormula}{$T$} }
+            \If{$sol = \texttt{unsat}$} 
+                \State $\sigma \gets $ \Call{generalise}{$s$} \Comment{Expand $s$ to a set of states}
+                \State \Call{learn}{$\sigma, T$}
+                \State \Return $\emptyset$ \Comment{No candidate exists}
+            \Else
+                \State \Return $\{ \langle n, c \rangle | n \in $ \Call{gtNodes}{T} $, c = \Call{sol}{n} \}$ \Comment{Fix candidate moves in $T$}
+            \EndIf
+        \EndFunction
+        \algstore{u3}
+    \end{algorithmic}
+
+    \begin{algorithmic}
+        \algrestore{u3}
+        \Function{verify}{$\langle s, r\rangle, gt, cand$}
+            \For{$l \in leaves(gt)$}
+            \State $\langle r', s'\rangle \gets $ \Call{outcome}{$\langle s, r\rangle, gt, l$} \Comment{Get rank and state at leaf}
+                \State $u \gets $ \Call{\textoverline{solveAbstract}}{$\langle r', s' \rangle, \emptyset$} \Comment{Solve for the opponent}
+                \IIf{$u \neq \emptyset$} \Return $\langle \False, l, u \rangle$ \EndIIf \Comment{Return counterexample}
+            \EndFor
+            \State \Return $\langle \True, \emptyset, \emptyset \rangle$
+        \EndFunction
+    \end{algorithmic}
+
+    \caption{Unbounded Synthesis}
+    \label{alg:unbounded}
+\end{algorithm}
+
+\subsection{Correctness}
+
+The unbounded synthesis algorithm (Algorimthm \ref{alg:unbounded}) effectively
+consists of two communicating solvers: the counterexample-guided bounded
+reachability solver and the unbounded solver based on incremental induction.
+Fortunately, correctness of both solvers can be established largely
+independently, which simplifies the proof of correctness of the overall
+algorithm.
+
+We define two global invariants of the algorithm.  The \emph{may-invariant}
+states that sets $B^m[i]$ grows monotonically with $i$ and that each $B^m[i+1]$
+overapproximates the uncontrollable predecessor of $f^m[i]$: $$\forall
+i<k.~B^m[i] \subseteq B^m[i+1], Upre(B^m[i]) \subseteq B^m[i+1].$$
+
+The \emph{must-invariant} guarantees that the must-losing set $B^M$ is an
+underapproximation of the actual losing set $B$: $$B^M \subseteq B$$.
+
+The sets $B^m$ and $B^M$ are only modified by the inductive solver, implemented
+by \textsc{learn} and \textoverline{\textsc{learn}} functions.  Below we prove that these
+functions indeed maintain the invariants.
+
+\subsection{Proof of \textsc{learn}}
+
+We prove that postconditions of \textsc{learn} are satisfied assuming that its
+preconditions hold.
+
+Line~(4) splits the tree $T$ into $T_1$ and $T_2$, such that $T_2$ has
+depth 1.  Consider formulas $f_1=\sigma(X_T) \land \textsc{treeFormula}(T_1)$
+and $F_2 = \textsc{treeFormula}(T_2)$.  These formulas only share variables
+$X_n$.  Their conjunction $F_1 \land F_2$ is unsatisfiable, as by construction
+any solution of $F_1 \land F_2$ also satisfies $\sigma(X_T) \land
+\textsc{treeFormula}(T)$, which is unsatisfiable (precondition (b)).  Hence the
+interpolation operation is defined for $F_1$ and $F_2$.  
+
+Intuitively, the interpolant computed in line~(5) overapproximates the set of 
+states reachable from $\sigma$ by following the tree from the root node to $n$,
+and underapproximates the set of states from which the controller loses against 
+tree $T_2$.  
+
+Formally, $\II$ has the property $\II \land F_2 \equiv \bot$.  Since $T_2$ is of depth
+1, this means that the controller cannot force the
+game into $W^m[|rank|(n-1)]$ when playing against counterexample moves in $T_2$.  Hence, 
+$\II \cap Cpre(W^m[|rank|(n)]) = \emptyset$.  Furthermore, since the
+may-invariant holds (assumption (c)), $\II \cap Cpre(i) = \emptyset$, for
+all $i<|rank|(n)$.  Hence, removing $\II$ from all $W^m[i], i\leq |rank|(n)$
+in line~(6) preserves the may-invariant, thus satisfying the first post-condition.
+
+Furthermore, the interpolant satisfies $F_1 \rightarrow \II$, i.e., any assignment to 
+$X_n$ that satisfies $\sigma(X_T) \land |treeFormula|(T_1)$ also satisfies $\II$.  Hence, removing $\II$ 
+from $W_m[|rank|(n)]$ makes $\sigma(X_T) \land |treeFormula|(T_1)$ unsatisfiable, 
+and hence all preconditions of the recursive invocation of \textsf{learn} in line~(7) 
+are satisfied.  
+
+At the second las recursive call to \textsf{learn}, tree $T_1$ is empty, $n$ is the root node,
+$|treeFormula|(T_1) \equiv W^m[|rank|(T)](X^T)$; hence 
+$\sigma(X_T) \land |treeFormula|(T_1) \equiv \sigma(X_T) \land W^m[|rank|(T)](X^T) \equiv \bot$.
+Thus the second postcondition of \textsf{learn} holds.
 
 \subsection{Proof of Termination}
 
-\subsection{Algorithm}
+We must prove that $|checkRank|$ terminates and that upon 
+termination its postcondition holds, i.e., state $s$ is added to $W^M$ if 
+its rank is no greater than $k$ or is removed from $W^m[k]$ otherwise.  
+Termination follows from completeness of couterexample-guided search, which 
+terminates after enumerating all possible opponent moves in the worst case.
+
+Assume that $|rank|(s) > k$.  This means that at some point the algorithm
+discovers a counterexample tree of rank $k$ that is losing for the controller 
+from state $s$.  The algorithm then invokes the $|learn|$ method, which 
+eliminates $s$ from $W^m[k]$.  Alternatively, if $|rank|(s) \leq k$, a 
+counterexample tree losing for the environment will be discovered and 
+subsequent call to $\overline{|learn|}$ adds $s$ to $W^M$.
+
+\section{Optimisations}
+
+\subsection{Generalising the initial state}
+
+\subsection{Choosing sensible opponent moves}
 
 \section{Evaluation}
 
