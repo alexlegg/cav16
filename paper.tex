@@ -1,6 +1,7 @@
 \documentclass{llncs}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{fixltx2e}
 \usepackage{subcaption}
 \captionsetup{compatibility=false}
 \usepackage{tikz}
@@ -8,6 +9,10 @@
 
 \algnewcommand{\IIf}[1]{\State\algorithmicif\ #1\ \algorithmicthen}
 \algnewcommand{\EndIIf}{}
+\MakeRobust{\Call}
+\newcommand{\True}{\texttt{true}}
+\newcommand{\False}{\texttt{false}}
+\newcommand{\textoverline}[1]{$\overline{\mbox{#1}}$}
 
 \pagestyle{headings}
 
@@ -147,11 +152,11 @@ produce these formulas are shown in Algorithm \ref{alg:treeFormula}.
     \end{algorithmic}
 
     \begin{algorithmic}
-        \Function{$\overline{treeFormula}$}{gt}
+        \Function{\textoverline{treeFormula}}{gt}
         \If{$\Call{rank}{gt} == 0$}
         \State \Return{\Call{E}{$x^{gt}$}}
         \Else
-        \State \Return{ $\Call{E}{x^{gt}} \lor \bigvee_{n \in \Call{succ}{gt}}(\Call{$\delta$}{n} \land \Call{label}{n} \land \Call{$\overline{treeFormula}$}{n})$ }
+        \State \Return{ $\Call{E}{x^{gt}} \lor \bigvee_{n \in \Call{succ}{gt}}(\Call{$\delta$}{n} \land \Call{label}{n} \land \Call{\textoverline{treeFormula}}{n})$ }
         \EndIf
         \EndFunction
     \end{algorithmic}
@@ -187,7 +192,8 @@ the algorithm terminates.  Otherwise we find a counterexample (Figure
 first move from the controller's spoiling strategy (Figure \ref{fig:refined}.
 The algorithm continues by finding a new candidate for the environment (Figure
 \ref{fig:candidate2}), and a new counterexample to refine the game abstraction
-once again (Figure \ref{fig:refined2}).
+once again (Figure \ref{fig:refined2}). The full algorithm is listed in
+Algorithm \ref{alg:bounded}.
 
 
 \tikzset{every node/.style={solid}}
@@ -270,45 +276,48 @@ once again (Figure \ref{fig:refined2}).
     \caption{Abstract game trees}
 \end{figure}
 
+
 \begin{algorithm}
     \begin{algorithmic}
-        \Function{solveAbstract}{$\langle s, r \rangle , gt$}
-        \State $cand \gets $ \Call{findCandidate}{$\langle s, r \rangle, gt$}
-        \IIf{$r = n - 1$} \Return $cand$ \EndIIf 
-        \State $gt' \gets gt$
+        \Function{solveAbstract}{$\langle s, r \rangle , T$}
+        \State $cand \gets $ \Call{findCandidate}{$\langle s, r \rangle, T$} \Comment{Look for a candidate}
+        \IIf{$r = n - 1$} \Return $cand$ \EndIIf \Comment{Reached the bound}
+        \State $T' \gets T$
         \Loop
-            \IIf{$cand = \emptyset $} \Return $\emptyset $ \EndIIf
-            \State $cex \gets $ \Call{verify}{$\langle s, r \rangle, gt, cand$}
-            \IIf{$cex = NULL$} \Return $cand$ \EndIIf
-            \State $gt' \gets gt' \cup cex$
-%%%            \State $gt' \gets \Call{refine}{gt', cex}$
-            \State $cand \gets $ \Call{solveAbstract}{$\langle s, r \rangle, gt'$}
+            \IIf{$cand = \emptyset $} \Return $\emptyset $ \EndIIf \Comment{No candidate: return with no solution}
+            \State $\langle cex, l, u \rangle \gets $ \Call{verify}{$\langle s, r \rangle, T, cand$} \Comment{Verify candidate}
+            \IIf{$cex = \False$} \Return $cand$ \EndIIf \Comment{No counterexample: return candidate}
+            \State $T' \gets $ \Call{gtAppend}{$T', l, u$} \Comment{Refine AGT with counterexample}
+            \State $cand \gets $ \Call{solveAbstract}{$\langle s, r \rangle, T'$} \Comment{Solve refined AGT}
         \EndLoop
         \EndFunction
     \end{algorithmic}
 
-%%%    \begin{algorithmic}
-%%%        \Function{refine}{$gt, \langle leaf, spoiling \rangle$}
-%%%            \State \Return $gt \cup \{leaf, spoiling\}$
-%%%        \EndFunction
-%%%    \end{algorithmic}
-
     \begin{algorithmic}
         \Function{findCandidate}{$\langle s, r \rangle, T$}
-            \State $\hat{T} \gets \Call{gtExtend}{T}$
-            \State $fml \gets $ \Call{treeFormula}{$\hat{T}$}
-            \State $sol \gets $ \Call{SAT}{$s(X_T) \land fml$}
+            \State $sol \gets $ \Call{SAT}{$s(X_T) \land$ \Call{treeFormula}{$T$} }
+            \IIf{$sol = \texttt{unsat}$} 
+                \Return $\emptyset$ \Comment{No candidate exists}
+            \EndIIf
+%%%            \Else \unskip\ 
+            \State \Return $\{ \langle n, c \rangle | n \in $ \Call{gtNodes}{T} $, c = \Call{sol}{n} \}$ \Comment{Fix candidate moves in $T$}
         \EndFunction
     \end{algorithmic}
 
     \begin{algorithmic}
         \Function{verify}{$\langle r, s\rangle, gt, cand$}
             \For{$l \in leaves(gt)$}
-                \State $\langle r', s'\rangle \gets $ \Call{outcome}{$\langle r, s\rangle, gt, l$}
-                \State $spoiling \gets $ \Call{solveAbstract}{$\langle r', s' \rangle, \emptyset$}
+            \State $\langle r', s'\rangle \gets $ \Call{outcome}{$\langle r, s\rangle, gt, l$} \Comment{Get rank and state at leaf}
+                \State $u \gets $ \Call{\textoverline{solveAbstract}}{$\langle r', s' \rangle, \emptyset$} \Comment{Solve for the opponent}
+                \IIf{$u \neq \emptyset$} \Return $\langle \False, l, u \rangle$ \EndIIf \Comment{Return counterexample}
             \EndFor
+            \State \Return $\langle \True, \emptyset, \emptyset \rangle$
         \EndFunction
     \end{algorithmic}
+
+
+    \caption{Bounded Synthesis}
+    \label{alg:bounded}
 \end{algorithm}
 
 \section{Unbounded Synthesis}
@@ -425,6 +434,16 @@ by removing a single step on each iteration. All learned states from which the
 controller must lose are recorded in a set $L^c$.  This algorithm can also be
 performed on environment-losing trees with the caveat that any state learnt at
 a node of rank $n$ is only known to lose at ranks less than or equal to $n$. 
+
+%%%\begin{algorithm}
+%%%    \caption{Unbounded Synthesis}
+%%%    \label{alg:unbounded}
+%%%    \begin{algorithmic}
+%%%    \end{algorithmic}
+
+%%%    \begin{algorithmic}
+%%%    \end{algorithmic}
+%%%\end{algorithm}
 
 \subsection{Proof of Termination}
 
