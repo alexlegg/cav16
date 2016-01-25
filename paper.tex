@@ -9,6 +9,8 @@
 
 \algnewcommand{\IIf}[1]{\State\algorithmicif\ #1\ \algorithmicthen}
 \algnewcommand{\EndIIf}{}
+\algnewcommand{\IfElse}[3]{\algorithmicif\ #1\ \algorithmicthen\ #2\ \algorithmicelse\ #3}
+\algnewcommand{\EndIfElse}{}
 \MakeRobust{\Call}
 \newcommand{\True}{\texttt{true}}
 \newcommand{\False}{\texttt{false}}
@@ -150,7 +152,7 @@ produce these formulas are shown in Algorithm \ref{alg:treeFormula}.
     \label{alg:treeFormula}
     \begin{algorithmic}[1]
         \Function{treeFormula}{gt}
-        \If{$\Call{rank}{gt} == 0$}
+        \If{$\Call{rank}{gt} = 0$}
         \State \Return{ $\lnot \Call{E}{x^{gt}}$ }
         \Else
         \State \Return{ $\lnot \Call{E}{x^{gt}} \land \bigwedge_{n \in \Call{succ}{gt}}(\Call{$\delta$}{n} \land \Call{label}{n} \land \Call{treeFormula}{n})$ }
@@ -162,7 +164,7 @@ produce these formulas are shown in Algorithm \ref{alg:treeFormula}.
     \begin{algorithmic}[1]
         \algrestore{tf1}
         \Function{\textoverline{treeFormula}}{gt}
-        \If{$\Call{rank}{gt} == 0$}
+        \If{$\Call{rank}{gt} = 0$}
         \State \Return{\Call{E}{$x^{gt}$}}
         \Else
         \State \Return{ $\Call{E}{x^{gt}} \lor \bigvee_{n \in \Call{succ}{gt}}(\Call{$\delta$}{n} \land \Call{label}{n} \land \Call{\textoverline{treeFormula}}{n})$ }
@@ -292,16 +294,16 @@ Algorithm \ref{alg:bounded}.
 
 \begin{algorithm}
     \begin{algorithmic}[1]
-        \Function{solveAbstract}{$\langle s, k \rangle , T$}
-        \State $cand \gets $ \Call{findCandidate}{$\langle s, k \rangle, T$} \Comment{Look for a candidate}
+        \Function{solveAbstract}{$p, \langle s, k \rangle , T$}
+        \State $cand \gets $ \Call{findCandidate}{$p, \langle s, k \rangle, T$} \Comment{Look for a candidate}
         \IIf{$k = n - 1$} \Return $cand$ \EndIIf \Comment{Reached the bound}
         \State $T' \gets T$
         \Loop
             \IIf{$cand = \emptyset $} \Return $\emptyset $ \EndIIf \Comment{No candidate: return with no solution}
-            \State $\langle cex, l, u \rangle \gets $ \Call{verify}{$\langle s, k \rangle, T, cand$} \Comment{Verify candidate}
+            \State $\langle cex, l, u \rangle \gets $ \Call{verify}{$p, \langle s, k \rangle, T, cand$} \Comment{Verify candidate}
             \IIf{$cex = \False$} \Return $cand$ \EndIIf \Comment{No counterexample: return candidate}
             \State $T' \gets $ \Call{gtAppend}{$T', l, u$} \Comment{Refine AGT with counterexample}
-            \State $cand \gets $ \Call{solveAbstract}{$\langle s, k \rangle, T'$} \Comment{Solve refined AGT}
+            \State $cand \gets $ \Call{solveAbstract}{$p, \langle s, k \rangle, T'$} \Comment{Solve refined AGT}
         \EndLoop
         \EndFunction
         \algstore{b1}
@@ -309,22 +311,23 @@ Algorithm \ref{alg:bounded}.
 
     \begin{algorithmic}
         \algrestore{b1}
-        \Function{findCandidate}{$\langle s, k \rangle, T$}
-            \State $sol \gets $ \Call{SAT}{$s(X_T) \land$ \Call{treeFormula}{$T$} }
+        \Function{findCandidate}{$p, \langle s, k \rangle, T$}
+            \State $f \gets $ \IfElse{$p = \texttt{cont}$}{\Call{treeFormula}{$T$}}{\Call{\textoverline{treeFormula}}{$T$}} \EndIfElse
+            \State $sol \gets $ \Call{SAT}{$s(X_T) \land f$}
             \IIf{$sol = \texttt{unsat}$} 
                 \Return $\emptyset$ \Comment{No candidate exists}
             \EndIIf
-            \State \Return $\{ \langle n, c \rangle | n \in $ \Call{gtNodes}{T} $, c = \Call{sol}{n} \}$ \Comment{Fix candidate moves in $T$}
+            \State \Return $\{ \langle n, m \rangle | n \in $ \Call{gtNodes}{T} $, m = \Call{sol}{n} \}$ \Comment{Fix candidate moves in $T$}
         \EndFunction
         \algstore{b2}
     \end{algorithmic}
 
     \begin{algorithmic}
         \algrestore{b2}
-        \Function{verify}{$\langle s, k\rangle, gt, cand$}
+        \Function{verify}{$p, \langle s, k\rangle, gt, cand$}
             \For{$l \in leaves(gt)$}
             \State $\langle k', s'\rangle \gets $ \Call{outcome}{$\langle s, k\rangle, gt, l$} \Comment{Get rank and state at leaf}
-                \State $u \gets $ \Call{\textoverline{solveAbstract}}{$\langle k', s' \rangle, \emptyset$} \Comment{Solve for the opponent}
+                \State $u \gets $ \Call{solveAbstract}{\Call{opponent}{$p$}, $\langle k', s' \rangle, \emptyset$} \Comment{Solve for the opponent}
                 \IIf{$u \neq \emptyset$} \Return $\langle \False, l, u \rangle$ \EndIIf \Comment{Return counterexample}
             \EndFor
             \State \Return $\langle \True, \emptyset, \emptyset \rangle$
@@ -460,7 +463,7 @@ avoid the error state.)
     \label{alg:treeFormula}
     \begin{algorithmic}[1]
         \Function{treeFormula}{gt}
-        \If{$\Call{rank}{gt} == 0$}
+        \If{$\Call{rank}{gt} = 0$}
         \State \Return{ $\lnot \Call{$B^M$}{x^{gt}}$ }
         \Else
         \State \Return{ $\lnot \Call{$B^M$}{x^{gt}} \land \bigwedge_{n \in \Call{succ}{gt}}(\Call{$\delta$}{n} \land \Call{label}{n} \land \Call{treeFormula}{n})$ }
@@ -472,7 +475,7 @@ avoid the error state.)
     \begin{algorithmic}
         \algrestore{tf2}
         \Function{\textoverline{treeFormula}}{gt}
-        \If{$\Call{rank}{gt} == 0$}
+        \If{$\Call{rank}{gt} = 0$}
         \State \Return{\Call{E}{$x^{gt}$}}
         \Else
         \State \Return{ $\Call{$B^m[rank(gt)]$}{x^{gt}} \land$ \\
@@ -512,6 +515,7 @@ sets of states $B^m$ which \emph{may} be bad states for the controller.
                     \Return \texttt{realisable} \Comment{Reached fixed point}
                 \EndIIf
                 \State $B^m[k] \gets \top$
+                \State \Call{checkRank}{$I, k$}
             \EndFor
         \EndFunction
         \algstore{u1}
@@ -526,23 +530,23 @@ sets of states $B^m$ which \emph{may} be bad states for the controller.
 %%%        $\exists u_{k..1} \forall c_{k..1} \  s(x_k) \land (E_k \lor (\delta(x_k, u_k, c_k) \land E(x_{k-1}) \lor ... \land E(x_1) \lor (\delta(x_1, u_1, c_1) \land E(x_0))...)$
 %%%            $\forall u_{k..1} \exists c_{k..1} \  s(x_k) \land \lnot E_k \land \delta(x_k, u_k, c_k) \land \lnot E(x_{k-1}) \land ... \land \delta(x_1, u_1, c_1) \land \lnot E(x_0)$
         \Function{checkRank}{$s, k$}
-            \State \Return \Call{solveAbstract}{$\langle s, k \rangle, \emptyset$}
+            \State \Return \Call{solveAbstract}{$\texttt{env}, \langle s, k \rangle, \emptyset$}
         \EndFunction
         \algstore{u2}
     \end{algorithmic}
 
     \begin{algorithmic}
         \algrestore{u2}
-        \Function{solveAbstract}{$\langle s, k \rangle , T$}
-        \State $cand \gets $ \Call{findCandidate}{$\langle s, k \rangle, T$} \Comment{Look for a candidate}
+        \Function{solveAbstract}{$p, \langle s, k \rangle , T$}
+        \State $cand \gets $ \Call{findCandidate}{$p, \langle s, k \rangle, T$} \Comment{Look for a candidate}
         \IIf{$k = n - 1$} \Return $cand$ \EndIIf \Comment{Reached the bound}
         \State $T' \gets T$
         \Loop
             \IIf{$cand = \emptyset $} \Return $\emptyset $ \EndIIf \Comment{No candidate: return with no solution}
-            \State $\langle cex, l, u \rangle \gets $ \Call{verify}{$\langle s, k \rangle, T, cand$} \Comment{Verify candidate}
+            \State $\langle cex, l, u \rangle \gets $ \Call{verify}{$p, \langle s, k \rangle, T, cand$} \Comment{Verify candidate}
             \IIf{$cex = \False$} \Return $cand$ \EndIIf \Comment{No counterexample: return candidate}
             \State $T' \gets $ \Call{gtAppend}{$T', l, u$} \Comment{Refine AGT with counterexample}
-            \State $cand \gets $ \Call{solveAbstract}{$\langle s, k \rangle, T'$} \Comment{Solve refined AGT}
+            \State $cand \gets $ \Call{solveAbstract}{$p, \langle s, k \rangle, T'$} \Comment{Solve refined AGT}
         \EndLoop
         \EndFunction
         \algstore{u3}
@@ -550,11 +554,13 @@ sets of states $B^m$ which \emph{may} be bad states for the controller.
 
     \begin{algorithmic}
         \algrestore{u3}
-        \Function{findCandidate}{$\langle s, k \rangle, T$}
-            \State $sol \gets $ \Call{SAT}{$s(X_T) \land$ \Call{treeFormula}{$T$} }
+        \Function{findCandidate}{$p, \langle s, k \rangle, T$}
+            \State $f \gets $ \IfElse{$p = \texttt{cont}$}{\Call{treeFormula}{$T$}}{\Call{\textoverline{treeFormula}}{$T$}} \EndIfElse
+            \State $sol \gets $ \Call{SAT}{$s(X_T) \land f$}
             \If{$sol = \texttt{unsat}$} 
                 \State $\sigma \gets $ \Call{generalise}{$s$} \Comment{Expand $s$ to a set of states}
                 \State \Call{learn}{$\sigma, T$}
+                \State \IfElse{$p = \texttt{cont}$}{\Call{learn}{$\sigma, T$}}{\Call{\textoverline{learn}}{$\sigma, T$}} \EndIfElse
                 \State \Return $\emptyset$ \Comment{No candidate exists}
             \Else
                 \State \Return $\{ \langle n, c \rangle | n \in $ \Call{gtNodes}{T} $, c = \Call{sol}{n} \}$ \Comment{Fix candidate moves in $T$}
@@ -565,10 +571,10 @@ sets of states $B^m$ which \emph{may} be bad states for the controller.
 
     \begin{algorithmic}
         \algrestore{u4}
-        \Function{verify}{$\langle s, k\rangle, gt, cand$}
+        \Function{verify}{$p, \langle s, k\rangle, gt, cand$}
             \For{$l \in leaves(gt)$}
             \State $\langle k', s'\rangle \gets $ \Call{outcome}{$\langle s, k\rangle, gt, l$} \Comment{Get rank and state at leaf}
-                \State $u \gets $ \Call{\textoverline{solveAbstract}}{$\langle k', s' \rangle, \emptyset$} \Comment{Solve for the opponent}
+                \State $u \gets $ \Call{solveAbstract}{\Call{opponent}{$p$}, $\langle k', s' \rangle, \emptyset$} \Comment{Solve for the opponent}
                 \IIf{$u \neq \emptyset$} \Return $\langle \False, l, u \rangle$ \EndIIf \Comment{Return counterexample}
             \EndFor
             \State \Return $\langle \True, \emptyset, \emptyset \rangle$
@@ -664,7 +670,49 @@ counterexample losing for the controller will be found. Subsequently
 
 \section{Optimisations}
 
+In this section we present some optimisations to the unbounded synthesis algorithm.
+
 \subsection{Generalising the initial state}
+
+If more states are removed from $B^m$ on each iteration of \textsc{checkRank}
+the algorithm will converge and terminate sooner. Additionally, any states
+removed from $B^M$ will reduce the number of states to be considered by the
+controller in future iterations.
+
+As it is written, the algorithm only considers an overapproximations of states
+reachable from $I$ for learning. Assuming that the algorithm does not
+terminate, then the addition of an extra step into the game on each iteration
+has the potential to greatly increase the reachable states. Considering some of
+these states earlier than they become reachable may lead to earlier
+termination.
+
+
+\begin{algorithm}
+    \begin{algorithmic}
+        \Function{checkRank}{$s, k$}
+            \State $r \gets $ \Call{solveAbstract}{$\texttt{env}, \langle s, k \rangle, \emptyset$}
+            \IIf{$r \neq \emptyset$} \Return $r$ \EndIIf
+            \State $s' \gets s$
+            \For{$x \in s$}
+                \State $r \gets$ \Call{solveAbstract}{$\texttt{env}, \langle s' \setminus \{x\}, k \rangle, \emptyset$}
+                \IIf{$r = \emptyset$} $s' \gets s' \setminus \{x\}$ \EndIIf
+            \EndFor
+            \State \Return $\emptyset$
+        \EndFunction
+    \end{algorithmic}
+    \caption{Generalise $I$ optimisation}
+    \label{alg:opt1}
+\end{algorithm}
+
+The optimisation that allows this is relatively simple and is inspired by a
+common greedy heuristic for minimising $\texttt{unsat}$ cores. $I$ is a value
+assignment to each variable in $X$. If the environment does not win for
+$\langle I, k \rangle$ then we attempt to solve for a generalised version of
+$I$ by removing one assignment at a time. If the controller can win from the
+larger set of states then we continue generalising without it. In this way we
+learn more states by increasing the reachable set. In our benchmarks we have
+observed that this optimisation is beneficial on the first few iterations of
+\textsc{checkRank}.
 
 \subsection{Choosing sensible opponent moves}
 
