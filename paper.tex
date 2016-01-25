@@ -292,16 +292,16 @@ Algorithm \ref{alg:bounded}.
 
 \begin{algorithm}
     \begin{algorithmic}[1]
-        \Function{solveAbstract}{$\langle s, r \rangle , T$}
-        \State $cand \gets $ \Call{findCandidate}{$\langle s, r \rangle, T$} \Comment{Look for a candidate}
-        \IIf{$r = n - 1$} \Return $cand$ \EndIIf \Comment{Reached the bound}
+        \Function{solveAbstract}{$\langle s, k \rangle , T$}
+        \State $cand \gets $ \Call{findCandidate}{$\langle s, k \rangle, T$} \Comment{Look for a candidate}
+        \IIf{$k = n - 1$} \Return $cand$ \EndIIf \Comment{Reached the bound}
         \State $T' \gets T$
         \Loop
             \IIf{$cand = \emptyset $} \Return $\emptyset $ \EndIIf \Comment{No candidate: return with no solution}
-            \State $\langle cex, l, u \rangle \gets $ \Call{verify}{$\langle s, r \rangle, T, cand$} \Comment{Verify candidate}
+            \State $\langle cex, l, u \rangle \gets $ \Call{verify}{$\langle s, k \rangle, T, cand$} \Comment{Verify candidate}
             \IIf{$cex = \False$} \Return $cand$ \EndIIf \Comment{No counterexample: return candidate}
             \State $T' \gets $ \Call{gtAppend}{$T', l, u$} \Comment{Refine AGT with counterexample}
-            \State $cand \gets $ \Call{solveAbstract}{$\langle s, r \rangle, T'$} \Comment{Solve refined AGT}
+            \State $cand \gets $ \Call{solveAbstract}{$\langle s, k \rangle, T'$} \Comment{Solve refined AGT}
         \EndLoop
         \EndFunction
         \algstore{b1}
@@ -309,7 +309,7 @@ Algorithm \ref{alg:bounded}.
 
     \begin{algorithmic}
         \algrestore{b1}
-        \Function{findCandidate}{$\langle s, r \rangle, T$}
+        \Function{findCandidate}{$\langle s, k \rangle, T$}
             \State $sol \gets $ \Call{SAT}{$s(X_T) \land$ \Call{treeFormula}{$T$} }
             \IIf{$sol = \texttt{unsat}$} 
                 \Return $\emptyset$ \Comment{No candidate exists}
@@ -321,10 +321,10 @@ Algorithm \ref{alg:bounded}.
 
     \begin{algorithmic}
         \algrestore{b2}
-        \Function{verify}{$\langle s, r\rangle, gt, cand$}
+        \Function{verify}{$\langle s, k\rangle, gt, cand$}
             \For{$l \in leaves(gt)$}
-            \State $\langle r', s'\rangle \gets $ \Call{outcome}{$\langle s, r\rangle, gt, l$} \Comment{Get rank and state at leaf}
-                \State $u \gets $ \Call{\textoverline{solveAbstract}}{$\langle r', s' \rangle, \emptyset$} \Comment{Solve for the opponent}
+            \State $\langle k', s'\rangle \gets $ \Call{outcome}{$\langle s, k\rangle, gt, l$} \Comment{Get rank and state at leaf}
+                \State $u \gets $ \Call{\textoverline{solveAbstract}}{$\langle k', s' \rangle, \emptyset$} \Comment{Solve for the opponent}
                 \IIf{$u \neq \emptyset$} \Return $\langle \False, l, u \rangle$ \EndIIf \Comment{Return counterexample}
             \EndFor
             \State \Return $\langle \True, \emptyset, \emptyset \rangle$
@@ -418,7 +418,7 @@ avoid the error state.)
         \Require $\sigma(X_T) \land $ \Call{treeFormula}{$T$} $\equiv \bot$
         \Require \emph{Must-invariant} holds
         \Ensure \emph{Must-invariant} holds
-        \Ensure $\sigma(X_T) \land B^M \equiv \bot$
+        \Ensure $\sigma(X_T) \land B^M$
         \Function{learn}{$\sigma, T$}
             \IIf{$T = \emptyset$}
                 \Return
@@ -512,7 +512,6 @@ sets of states $B^m$ which \emph{may} be bad states for the controller.
                     \Return \texttt{realisable} \Comment{Reached fixed point}
                 \EndIIf
                 \State $B^m[k] \gets \top$
-                \State \Call{solveAbstract}{$\langle I, k \rangle, \emptyset$}
             \EndFor
         \EndFunction
         \algstore{u1}
@@ -520,24 +519,38 @@ sets of states $B^m$ which \emph{may} be bad states for the controller.
 
     \begin{algorithmic}
         \algrestore{u1}
-        \Function{solveAbstract}{$\langle s, r \rangle , T$}
-        \State $cand \gets $ \Call{findCandidate}{$\langle s, r \rangle, T$} \Comment{Look for a candidate}
-        \IIf{$r = n - 1$} \Return $cand$ \EndIIf \Comment{Reached the bound}
-        \State $T' \gets T$
-        \Loop
-            \IIf{$cand = \emptyset $} \Return $\emptyset $ \EndIIf \Comment{No candidate: return with no solution}
-            \State $\langle cex, l, u \rangle \gets $ \Call{verify}{$\langle s, r \rangle, T, cand$} \Comment{Verify candidate}
-            \IIf{$cex = \False$} \Return $cand$ \EndIIf \Comment{No counterexample: return candidate}
-            \State $T' \gets $ \Call{gtAppend}{$T', l, u$} \Comment{Refine AGT with counterexample}
-            \State $cand \gets $ \Call{solveAbstract}{$\langle s, r \rangle, T'$} \Comment{Solve refined AGT}
-        \EndLoop
+        \Require \emph{May} and \emph{must} invariants hold
+        \Ensure \emph{May} and \emph{must} invariants hold
+        \Ensure $\lnot s \in B^m[k]$ if there is a winning controller strategy of length $k$ starting at $s$
+        \Ensure $s \in B^M$ if there is a winning environment strategy of length $k$ starting at $s$
+%%%        $\exists u_{k..1} \forall c_{k..1} \  s(x_k) \land (E_k \lor (\delta(x_k, u_k, c_k) \land E(x_{k-1}) \lor ... \land E(x_1) \lor (\delta(x_1, u_1, c_1) \land E(x_0))...)$
+%%%            $\forall u_{k..1} \exists c_{k..1} \  s(x_k) \land \lnot E_k \land \delta(x_k, u_k, c_k) \land \lnot E(x_{k-1}) \land ... \land \delta(x_1, u_1, c_1) \land \lnot E(x_0)$
+        \Function{checkRank}{$s, k$}
+            \State \Return \Call{solveAbstract}{$\langle s, k \rangle, \emptyset$}
         \EndFunction
         \algstore{u2}
     \end{algorithmic}
 
     \begin{algorithmic}
         \algrestore{u2}
-        \Function{findCandidate}{$\langle s, r \rangle, T$}
+        \Function{solveAbstract}{$\langle s, k \rangle , T$}
+        \State $cand \gets $ \Call{findCandidate}{$\langle s, k \rangle, T$} \Comment{Look for a candidate}
+        \IIf{$k = n - 1$} \Return $cand$ \EndIIf \Comment{Reached the bound}
+        \State $T' \gets T$
+        \Loop
+            \IIf{$cand = \emptyset $} \Return $\emptyset $ \EndIIf \Comment{No candidate: return with no solution}
+            \State $\langle cex, l, u \rangle \gets $ \Call{verify}{$\langle s, k \rangle, T, cand$} \Comment{Verify candidate}
+            \IIf{$cex = \False$} \Return $cand$ \EndIIf \Comment{No counterexample: return candidate}
+            \State $T' \gets $ \Call{gtAppend}{$T', l, u$} \Comment{Refine AGT with counterexample}
+            \State $cand \gets $ \Call{solveAbstract}{$\langle s, k \rangle, T'$} \Comment{Solve refined AGT}
+        \EndLoop
+        \EndFunction
+        \algstore{u3}
+    \end{algorithmic}
+
+    \begin{algorithmic}
+        \algrestore{u3}
+        \Function{findCandidate}{$\langle s, k \rangle, T$}
             \State $sol \gets $ \Call{SAT}{$s(X_T) \land$ \Call{treeFormula}{$T$} }
             \If{$sol = \texttt{unsat}$} 
                 \State $\sigma \gets $ \Call{generalise}{$s$} \Comment{Expand $s$ to a set of states}
@@ -547,15 +560,15 @@ sets of states $B^m$ which \emph{may} be bad states for the controller.
                 \State \Return $\{ \langle n, c \rangle | n \in $ \Call{gtNodes}{T} $, c = \Call{sol}{n} \}$ \Comment{Fix candidate moves in $T$}
             \EndIf
         \EndFunction
-        \algstore{u3}
+        \algstore{u4}
     \end{algorithmic}
 
     \begin{algorithmic}
-        \algrestore{u3}
-        \Function{verify}{$\langle s, r\rangle, gt, cand$}
+        \algrestore{u4}
+        \Function{verify}{$\langle s, k\rangle, gt, cand$}
             \For{$l \in leaves(gt)$}
-            \State $\langle r', s'\rangle \gets $ \Call{outcome}{$\langle s, r\rangle, gt, l$} \Comment{Get rank and state at leaf}
-                \State $u \gets $ \Call{\textoverline{solveAbstract}}{$\langle r', s' \rangle, \emptyset$} \Comment{Solve for the opponent}
+            \State $\langle k', s'\rangle \gets $ \Call{outcome}{$\langle s, k\rangle, gt, l$} \Comment{Get rank and state at leaf}
+                \State $u \gets $ \Call{\textoverline{solveAbstract}}{$\langle k', s' \rangle, \emptyset$} \Comment{Solve for the opponent}
                 \IIf{$u \neq \emptyset$} \Return $\langle \False, l, u \rangle$ \EndIIf \Comment{Return counterexample}
             \EndFor
             \State \Return $\langle \True, \emptyset, \emptyset \rangle$
@@ -568,7 +581,7 @@ sets of states $B^m$ which \emph{may} be bad states for the controller.
 
 \subsection{Correctness}
 
-The unbounded synthesis algorithm (Algorimthm \ref{alg:unbounded}) effectively
+The unbounded synthesis algorithm (Algorithm \ref{alg:unbounded}) effectively
 consists of two communicating solvers: the counterexample-guided bounded
 reachability solver and the unbounded solver based on incremental induction.
 Fortunately, correctness of both solvers can be established largely
@@ -587,57 +600,67 @@ The sets $B^m$ and $B^M$ are only modified by the inductive solver, implemented
 by \textsc{learn} and \textoverline{\textsc{learn}} functions.  Below we prove that these
 functions indeed maintain the invariants.
 
-\subsection{Proof of \textsc{learn}}
+\subsection{Proof of \textsc{\textoverline{learn}}}
 
-We prove that postconditions of \textsc{learn} are satisfied assuming that its
-preconditions hold.
+We prove that postconditions of \textsc{\textoverline{learn}} are satisfied
+assuming that its preconditions hold.
 
-Line~(4) splits the tree $T$ into $T_1$ and $T_2$, such that $T_2$ has
-depth 1.  Consider formulas $f_1=\sigma(X_T) \land \textsc{treeFormula}(T_1)$
-and $F_2 = \textsc{treeFormula}(T_2)$.  These formulas only share variables
+Line~(11) splits the tree $T$ into $T_1$ and $T_2$, such that $T_2$ has depth
+1.  Consider formulas $f_1=\sigma(X_T) \land
+\textsc{\textoverline{treeFormula}}(T_1)$ and $F_2 =
+\textsc{\textoverline{treeFormula}}(T_2)$.  These formulas only share variables
 $X_n$.  Their conjunction $F_1 \land F_2$ is unsatisfiable, as by construction
 any solution of $F_1 \land F_2$ also satisfies $\sigma(X_T) \land
 \textsc{treeFormula}(T)$, which is unsatisfiable (precondition (b)).  Hence the
 interpolation operation is defined for $F_1$ and $F_2$.  
 
-Intuitively, the interpolant computed in line~(5) overapproximates the set of 
+Intuitively, the interpolant computed in line~(13) overapproximates the set of
 states reachable from $\sigma$ by following the tree from the root node to $n$,
-and underapproximates the set of states from which the controller loses against 
-tree $T_2$.  
+and underapproximates the set of states from which the environment loses
+against tree $T_2$.  
 
-Formally, $\II$ has the property $\II \land F_2 \equiv \bot$.  Since $T_2$ is of depth
-1, this means that the controller cannot force the
-game into $W^m[|rank|(n-1)]$ when playing against counterexample moves in $T_2$.  Hence, 
-$\II \cap Cpre(W^m[|rank|(n)]) = \emptyset$.  Furthermore, since the
-may-invariant holds (assumption (c)), $\II \cap Cpre(i) = \emptyset$, for
-all $i<|rank|(n)$.  Hence, removing $\II$ from all $W^m[i], i\leq |rank|(n)$
-in line~(6) preserves the may-invariant, thus satisfying the first post-condition.
+Formally, $\II$ has the property $\II \land F_2 \equiv \bot$.  Since $T_2$ is
+of depth 1, this means that the environment cannot force the game into
+$B^m[\textsc{rank}(n)]$ playing against the counterexample moves in $T_2$.
+Hence, $\II \cap Upre(B^m[\textsc{rank}(n)]) = \emptyset$.  Furthermore, since
+the may-invariant holds, $\II \cap Upre(i) = \emptyset$, for all $i <
+\textsc{rank}(n)$.  Hence, removing $\II$ from all $B^m[i], i\leq
+\textsc{rank}(n)$ in line~(15) preserves the may-invariant, thus satisfying the
+first post-condition.
 
-Furthermore, the interpolant satisfies $F_1 \rightarrow \II$, i.e., any assignment to 
-$X_n$ that satisfies $\sigma(X_T) \land |treeFormula|(T_1)$ also satisfies $\II$.  Hence, removing $\II$ 
-from $W_m[|rank|(n)]$ makes $\sigma(X_T) \land |treeFormula|(T_1)$ unsatisfiable, 
-and hence all preconditions of the recursive invocation of \textsf{learn} in line~(7) 
-are satisfied.  
+Furthermore, the interpolant satisfies $F_1 \rightarrow \II$, i.e., any
+assignment to $X_n$ that satisfies $\sigma(X_T) \land |treeFormula|(T_1)$ also
+satisfies $\II$.  Hence, removing $\II$ from $B^m[\textsc{rank}(n)]$ makes
+$\sigma(X_T) \land |treeFormula|(T_1)$ unsatisfiable, and hence all
+preconditions of the recursive invocation of \textsc{\textoverline{learn}} in
+line~(17) are satisfied.  
 
-At the second las recursive call to \textsf{learn}, tree $T_1$ is empty, $n$ is the root node,
-$|treeFormula|(T_1) \equiv W^m[|rank|(T)](X^T)$; hence 
-$\sigma(X_T) \land |treeFormula|(T_1) \equiv \sigma(X_T) \land W^m[|rank|(T)](X^T) \equiv \bot$.
-Thus the second postcondition of \textsf{learn} holds.
+At the second last recursive call to \textsc{\textoverline{learn}}, tree $T_1$
+is empty, $n$ is the root node, $\textsc{\textoverline{treeFormula}}(T_1)
+\equiv B^m[\textsc{rank}(T)](X^T)$; hence $\sigma(X_T) \land
+\textsc{\textoverline{treeFormula}}(T_1) \equiv \sigma(X_T) \land
+B^m[\textsc{rank}(T)](X^T) \equiv \bot$.  Thus the second postcondition of
+\textsc{\textoverline{learn}} holds.
 
 \subsection{Proof of Termination}
 
-We must prove that $|checkRank|$ terminates and that upon 
-termination its postcondition holds, i.e., state $s$ is added to $W^M$ if 
-its rank is no greater than $k$ or is removed from $W^m[k]$ otherwise.  
-Termination follows from completeness of couterexample-guided search, which 
-terminates after enumerating all possible opponent moves in the worst case.
+We must prove that \textsc{checkRank} terminates and that upon termination its
+postcondition holds.
 
-Assume that $|rank|(s) > k$.  This means that at some point the algorithm
-discovers a counterexample tree of rank $k$ that is losing for the controller 
-from state $s$.  The algorithm then invokes the $|learn|$ method, which 
-eliminates $s$ from $W^m[k]$.  Alternatively, if $|rank|(s) \leq k$, a 
-counterexample tree losing for the environment will be discovered and 
-subsequent call to $\overline{|learn|}$ adds $s$ to $W^M$.
+We must prove that $\textsc{checkRank}$ terminates and that upon termination
+its postcondition holds, i.e., state $s$ is removed from $B^m[k]$ if there is a
+winning controller strategy on the bounded safety game of rank $k$ or it is
+added to $B^M$ otherwise. Termination follows from completeness of
+counterexample-guided search, which terminates after enumerating all possible
+opponent moves in the worst case.
+
+Assume that there is a winning strategy for the controller at rank $k$. This
+means that at some point the algorithm discovers a counterexample tree of rank
+$k$ for which the environment cannot force into $E$. The algorithm then invokes
+the \textsc{\textoverline{learn}} method, adds $s$ to $B^M$.  Alternatively, if
+there is a winning strategy for the environment at rank $k$ then a
+counterexample losing for the controller will be found. Subsequently
+\textsc{learn} will be called and $s$ eliminated from $B^m[k]$.
 
 \section{Optimisations}
 
