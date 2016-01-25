@@ -123,10 +123,11 @@ valuations. Formally, we define the tree as a set of lists of label valuations
 and a node in the tree may be identified by the list made by following the path
 from the root.
 
-The entire set of runs of a bounded game of rank $n$ is
-symbolically represented by a tree of depth $2n$ and width 1 populated by
-unfixed edges.  Reducing the set of runs in a game forms an abstract game,
-which can be represented symbolically by an \emph{abstract game tree}.
+The entire set of runs of a bounded game of rank $n$ is symbolically
+represented by a tree of depth $2n$ (a step is two moves - environment then
+controller) and width 1 populated by unfixed edges.  Fixing some moves and
+thereby reducing the set of runs forms an \emph{abstract game tree} that
+symbolically represents a smaller version of the game.
 
 A strategy is equivalent to the set of all runs with the player's labels
 obeying the strategy mapping $\pi$. Therefore, a strategy can also be
@@ -143,9 +144,10 @@ by that partial strategy must be winning.
 An abstract game tree can be checked for the existence of a winning run by a
 SAT solver\cite{narodytska2014}.  The tree must be encoded into CNF by making
 copies of the transition relation for each game step in tree. The formula must
-also check whether the error state has been reached in no branch/in all
-branches for the controller and environment respectively. The functions that
-produce these formulas are shown in Algorithm \ref{alg:treeFormula}.
+also check whether the error state has been reached in no branch
+(\emph{respectively}: in all branches) for the controller (\emph{resp}:
+environment.) The functions that produce these formulas are shown in Algorithm
+\ref{alg:treeFormula}.
 
 \begin{algorithm}
     \caption{Tree formulas for Controller and Environment respectively}
@@ -177,23 +179,23 @@ When we produce a formula using $\textsc{treeFormula}$ the SAT solver is
 playing on behalf on the controller. Any unfixed labels in the tree,
 controllable or uncontrollable, will be existentially quantified.  This means
 that if there exists a way for the game to be solved when both players
-cooperate the SAT solver will find it. If no winning run exists in an abstract
-game even when the players are cooperating then there is definitely no winning
-run when the opponent is playing adversarily.
+cooperate on unfixed labels the SAT solver will find it. If no winning run
+exists in an abstract game even when the players are cooperating then there is
+no winning run when the opponent is playing adversarily.
 
 \subsection{Counterexample Guided Bounded Synthesis}
 
 By checking for the existence of a winning run for the environment in an
 abstract game tree constructed from a partial controller strategy we are
-checking if the partial strategy is winning. If no spoiling run can be found
-then the partial strategy must always win. If a spoiling run is found then we
-then we have a counterexample that proves that the controller strategy is not
-winning. This forms the basis of a counterexample guided abstraction refinement
-framework that operates on candidate strategies.
+checking if the partial strategy is winning. If no environment-winning run is
+exists within the partial strategy then it is a winning partial strategy,
+otherwise the spoiling run is a counterexample that proves that the partial
+strategy is not winning. This forms the basis of a counterexample guided
+abstraction refinement framework that operates on candidate strategies.
 
 This technique was proposed by Narodytska et al \cite{narodytska2014}. In
 Section \ref{sect:unbounded} we propose an extension to synthesis of unbounded
-games.
+games but the original algorithm is outlined here for completeness.
 
 The bounded synthesis algorithm begins with an empty game as seen in Figure
 \ref{fig:emptytree}.  Initially we are playing on behalf of the environment
@@ -204,10 +206,10 @@ spoiling strategy by solving for the controller.  If no spoiling strategy
 exists, that means our candidate is a winning strategy and the algorithm
 terminates.  Otherwise we find a counterexample (Figure \ref{fig:cex}), which
 is used to refine the empty game tree to include the first move from the
-controller's spoiling strategy (Figure \ref{fig:refined}.  The algorithm
+controller's spoiling strategy (Figure \ref{fig:refined}).  The algorithm
 continues by finding a new candidate for the environment (Figure
 \ref{fig:candidate2}), and a new counterexample to refine the game abstraction
-once again (Figure \ref{fig:refined2}). The full algorithm is listed in
+once again (Figure \ref{fig:refined2}). The full procedure is listed in
 Algorithm \ref{alg:bounded}.
 
 
@@ -343,16 +345,18 @@ Algorithm \ref{alg:bounded}.
 \label{sect:unbounded}
 
 Bounded synthesis can be used to prove the existence of a winning strategy for
-the environment by providing a witness. For the controller, the strongest claim
-that can be made is that the strategy is winning as long as the game does not
-extend longer than the bound.
+the environment on the unbounded game by providing a witness. For the
+controller, the strongest claim that can be made is that the strategy is
+winning as long as the game does not extend beyond the bound.
 
-In model checking the maximum bound is decided based on the states of the game
-\cite{biere1999}. The na\"ive approach is to use size of the state space as the
-bound ($2^{|X|}$). With a bound of this size all states may be explored. One
-optimisation is to use the diameter of the game, which is the smallest number
-$d$ such that for any state $x$ there is a path of length $\leq d$ to all other
-reachable states. However, for large games these bounds are intractable.
+It is possible to set a bound such that all runs in the unbounded game will be
+considered. The na\"ive approach is to use size of the state space as the bound
+($2^{|X|}$) so that all states may be explored by the algorithm. A more nuanced
+approach is to use the diameter of the game \cite{biere1999}, which is the
+smallest number $d$ such that for any state $x$ there is a path of length $\leq
+d$ to all other reachable states. This approach is common in bounded model
+checking but for synthesis it quickly becomes intractable to consider such long
+runs.
 
 When performing model checking or synthesis with BDDs \cite{burch1990} the set
 of states that are winning for the environment is iteratively constructed by
@@ -370,11 +374,11 @@ game tree.
 \subsection{Learning States with Interpolants}
 
 Given two formulas $A$ and $B$ such that $A \land B$ is unsatisfiable, it is
-possible to construct and interpolant $\mathcal{I}$ such that $A \to
-\mathcal{I}$, $B \land \mathcal{I}$ is unsatisfiable, and $\mathcal{I}$ refers
-only to the intersection of variables in $A$ and $B$. An interpolant can be
-constructed efficiently from a resolution proof of the unsatisfiability of $A
-\land B$ \cite{pudlak1997}.
+possible to construct a Craig interpolant\cite{craig1957} $\mathcal{I}$ such
+that $A \to \mathcal{I}$, $B \land \mathcal{I}$ is unsatisfiable, and
+$\mathcal{I}$ refers only to the intersection of variables in $A$ and $B$.  An
+interpolant can be constructed efficiently from a resolution proof of the
+unsatisfiability of $A \land B$ \cite{pudlak1997}.
 
 \begin{figure}
     \centering
@@ -405,7 +409,7 @@ $x_0^0$ and $x_0^1$ are at rank 0. Since the tree is controller-losing we know
 that at least one run represented by the tree contains the error state.  As
 a result, $\textsc{treeFormula}(gt)$ is unsatisfiable. If we take the step
 $x_1$ to $x_0^0$ and cut it from the rest of the tree then
-$\textsc{treeFormula}(step) \land \textsc{treeFormula}(parent)$ must still be
+$\textsc{treeFormula}(step) \land \textsc{treeFormula}(parent)$ must too be
 unsatisfiable.
 
 We can construct an interpolant with $A = \textsc{treeFormula}(parent)$ and $B
@@ -460,7 +464,7 @@ avoid the error state.)
 
 \begin{algorithm}
     \caption{Amended tree formulas for Controller and Environment respectively}
-    \label{alg:treeFormula}
+    \label{alg:unboundedTreeFormula}
     \begin{algorithmic}[1]
         \Function{treeFormula}{gt}
         \If{$\Call{rank}{gt} = 0$}
@@ -670,7 +674,8 @@ counterexample losing for the controller will be found. Subsequently
 
 \section{Optimisations}
 
-In this section we present some optimisations to the unbounded synthesis algorithm.
+%%%In this section two optimisations to the unbounded synthesis algorithm are
+%%%described.
 
 \subsection{Generalising the initial state}
 
@@ -715,6 +720,25 @@ observed that this optimisation is beneficial on the first few iterations of
 \textsc{checkRank}.
 
 \subsection{Choosing sensible opponent moves}
+
+One aspect of the algorithm proposed by Narodytska et al\cite{narodytska2014}
+is that it mimics real-world uses of synthesis by allowing cooperation between
+system and environment. Unfortunately, allowing the opponents to pick moves for
+one another can frequently backfire. It is common when modelling real-world
+systems to abstract over out of scope failures with transitions that
+immediately determine the outcome of the game. For example, in a network driver
+a request to send a packet may fail due to a disconnected wire, which might be
+modelled as an environment controlled transition to a system-winning state.
+
+This slows down the synthesis process as all erroneous transition are
+accumulated into the abstract game tree. To mitigate this effect we have a
+heuristic to guess non-erroneous labels as \emph{default moves} that are used
+instead of allowing the opponent to choose. This does not effect the
+correctness of the algorithm. If line~(28) previously returned \texttt{sat} and
+is \texttt{unsat} with default moves then those moves would eventually have
+been added to the abstraction in a refinement step. If the formula is
+\texttt{unsat} even with the opponent choosing moves then it must be
+\texttt{unsat} with default moves.
 
 \section{Evaluation}
 
