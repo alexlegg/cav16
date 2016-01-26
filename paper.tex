@@ -4,6 +4,7 @@
 \usepackage{fixltx2e}
 \usepackage{subcaption}
 \captionsetup{compatibility=false}
+\usepackage{amsmath}
 \usepackage{tikz}
 \usetikzlibrary{trees}
 \usetikzlibrary{positioning}
@@ -38,6 +39,8 @@
 %    \and Samsung Research America}
 
 \maketitle
+
+\sloppy
 
 \begin{abstract}
 
@@ -86,22 +89,27 @@ of bounded games \cite{narodytska2014} by forming abstract representations of
 the game.  In this paper, we extend this idea to unbounded games by
 constructing approximate sets of winning states from abstract trees.
 
-\section{Reactive Synthesis}
+\section{Background}
 
-A \emph{safety game}, $G = \langle X, L_u, L_c, \delta, I, E, \rangle$,
-consists of a set of boolean state variables, sets of uncontrollable and
-controllable label variables, a transition relationship $\delta : (X, L_u, L_c)
-\to X$, an initial state, and an error state. The \emph{controller} and
-\emph{environment} players choose controllable and uncontrollable labels
-respectively and the game proceeds according to $\delta$. 
+A \emph{safety game}, $G = \langle X, L_u, L_c, \delta, I, E \rangle$,
+is defined over boolean state variables $X$, uncontrollable label variables $L_u$, and
+controllable label variables $L_c$.  $I$ is the initial state of the game given as a 
+valuation of state variables.  $E(X)$ is the set of error states represented by its 
+characteristic formula.  The transition relation $\delta(X, L_u, L_c, X')$ of the game 
+is a boolean formula that relates current state and label to the set of possible next 
+states of the game.  We assume deterministic games, where 
+$\delta(x,u,c,x'_1) \land \delta(x,u,c,x'_2) \implies (x'_1=x'_2)$.
 
-An \emph{run} of a game $(x_0, u_0, c_0), (x_1, u_1, c_1) \dots (x_n, u_n,
-c_n)$ is a chain of state and label pairs of length $n$ s.t.  $x_{k+1}
-\leftarrow \delta(x_k, u_k, c_k)$. A run is winning for the controller if $x_0
-= I \land \forall i \in \{1..n\} (x_i \neq E)$. In a bounded game of rank $n$
-all runs are restricted to length $n$, whereas unbounded games consider runs of
-infinite length. Since we consider only deterministic games a run is equivalent
-to a list of assignments to $L_c$ and $L_u$.
+
+At every round of the game, the \emph{environment} picks an
+uncontrollable label, the \emph{controller} responds by choosing a controllable 
+label and the game transitions into a new state according to $\delta$. 
+A \emph{run} of a game $(x_0, u_0, c_0), (x_1, u_1, c_1) \dots (x_n, u_n,
+c_n)$ is a chain of state and label pairs s.t.\,$\delta(x_k, u_k, c_k, x_{k+1})$. 
+A run is winning for the controller if $x_0 = I \land \forall i \in \{1..n\} (\lnot E(x_i))$. 
+In a \emph{bounded game} of rank $n$ all runs are restricted to length $n$, whereas unbounded 
+games consider runs of infinite length. Since we consider only deterministic games, a run 
+is uniquely described by a list of assignments to $L_c$ and $L_u$.
 
 A \emph{controller strategy} $\pi^c : (X, L_u) \to L_c$ is a mapping of states
 and uncontrollable inputs to controllable labels. A controller strategy is
@@ -112,13 +120,16 @@ such a strategy for a bounded game.
 
 An \emph{environment strategy} $\pi^e : X \to L_u$ is a mapping of states to
 uncontrollable labels. A bounded run is winning for the environment if $x_0
-= I \land \exists i \in \{1..n\} (x_i = E)$ and an environment strategy is
-winning for a bounded game if there exists a run $(x_0, \pi^e(x_1), c_1), (x_1,
-\pi^e(x_1), c_1) \dots (x_n, \pi^e(x_n), c_n)$ that wins for the environment.
-Safety games are zero sum, therefore the existence of a controller strategy
-implies the nonexistence of an environment strategy and vice versa.
+= I \land \exists i \in \{1..n\} (E(x_i))$ and an environment strategy is
+winning for a bounded game if all runs $(x_0, \pi^e(x_1), c_1), (x_1,
+\pi^e(x_1), c_1) \dots (x_n, \pi^e(x_n), c_n)$ are winning for the environment.
+Safety games are zero sum, therefore the existence of a winning controller strategy
+implies the nonexistence of a winning environment strategy and vice versa.
 
-\subsection{Abstract Game Trees}
+\subsection{Counterexample-guided bounded synthesis}
+
+We review the bounded synthesis algorithm by Narodytska et al.~\cite{narodytska2014},
+which is the main building block for our unbounded algorithm.
 
 A set of runs can be represented symbolically by a tree of valuations to
 controllable and uncontrollable label variables where valuations are allowed to
@@ -133,7 +144,7 @@ controller) and width 1 populated by unfixed edges.  Fixing some moves and
 thereby reducing the set of runs forms an \emph{abstract game tree} that
 symbolically represents a smaller version of the game.
 
-A strategy is equivalent to the set of all runs with the player's labels
+A strategy is equivalent to the set of all runs with the controller's labels
 obeying the strategy mapping $\pi$. Therefore, a strategy can also be
 represented by a tree. Relaxing the restriction of the strategy mapping allows
 for a \emph{partial strategy} in which multiple labels are now possible for a
@@ -187,8 +198,6 @@ cooperate on unfixed labels the SAT solver will find it. If no winning run
 exists in an abstract game even when the players are cooperating then there is
 no winning run when the opponent is playing adversarily.
 
-\subsection{Counterexample Guided Bounded Synthesis}
-
 By checking for the existence of a winning run for the environment in an
 abstract game tree constructed from a partial controller strategy we are
 checking if the partial strategy is winning. If no environment-winning run is
@@ -196,10 +205,6 @@ exists within the partial strategy then it is a winning partial strategy,
 otherwise the spoiling run is a counterexample that proves that the partial
 strategy is not winning. This forms the basis of a counterexample guided
 abstraction refinement framework \cite{clarke2000} that operates on candidate strategies.
-
-This technique was proposed by Narodytska et al \cite{narodytska2014}. In
-Section \ref{sect:unbounded} we propose an extension to synthesis of unbounded
-games but the original algorithm is outlined here for completeness.
 
 The bounded synthesis algorithm (Algorithm \ref{alg:bounded}) begins with an
 empty game as seen in Figure \ref{fig:emptytree}.  Initially we are playing on
@@ -722,7 +727,7 @@ observed that this optimisation is beneficial on the first few iterations of
 
 \subsection{Choosing sensible opponent moves}
 
-One aspect of the algorithm proposed by Narodytska et al\cite{narodytska2014}
+One aspect of the algorithm proposed by Narodytska et al.~\cite{narodytska2014}
 is that it mimics real-world uses of synthesis by allowing cooperation between
 system and environment. Unfortunately, allowing the opponents to pick moves for
 one another can frequently backfire. It is common when modelling real-world
