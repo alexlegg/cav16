@@ -76,7 +76,7 @@ one-size-fits-all solution for all reactive synthesis specifications.
 
 Advances in SAT solving technology has prompted research into its applicability
 to synthesis as an alternative to BDDs. One approach is to find sets of states
-in CNF \cite{demiurge}. Another approach is to eschew states and focus on
+in CNF \cite{bloem2014}. Another approach is to eschew states and focus on
 \emph{runs} of the game. Previous work has applied this idea to realizability
 of bounded games \cite{narodytska2014} by forming abstract representations of
 the game.  In this paper, we extend this idea to unbounded games by
@@ -191,7 +191,7 @@ checking if the partial strategy is winning. If no environment-winning run is
 exists within the partial strategy then it is a winning partial strategy,
 otherwise the spoiling run is a counterexample that proves that the partial
 strategy is not winning. This forms the basis of a counterexample guided
-abstraction refinement framework that operates on candidate strategies.
+abstraction refinement framework \cite{clarke2000} that operates on candidate strategies.
 
 This technique was proposed by Narodytska et al \cite{narodytska2014}. In
 Section \ref{sect:unbounded} we propose an extension to synthesis of unbounded
@@ -743,6 +743,30 @@ been added to the abstraction in a refinement step. If the formula is
 \section{Evaluation}
 
 \section{Related Work}
+
+Synthesis of safety games is a thoroughly explored area of research with most
+efforts directed toward solving games with BDDs \cite{burch1990} and abstract
+interpretation \cite{walker2014,brenguier2014}. Satisfiability solving has been used
+previously for synthesis in a suite of methods proposed by Bloem et al
+\cite{bloem2014}. The authors propose a propose employing competing SAT solvers
+to learn clauses, which is similar to our approach but does not unroll the
+game. They also suggest QBF solver, template-based, and Effectively
+Propositional Logic (EPL) approaches.
+
+There are different approaches to bounded synthesis than the one described
+here. The authors of \cite{finkbeiner2013} suggest a methodology directly
+inspired by bounded model checking and it has been adapted to symbolic
+synthesis \cite{ehlers2010}. Lazy synthesis \cite{finkbeiner2012} is a
+counterexample-guided approach to bounded synthesis that refines an
+implementation for the game instead of an abstraction of it.
+
+SAT-based bounded model checking approaches that unroll the transition relation
+have been extended to unbounded by using conflicts in the solver
+\cite{mcmillan2002}, or by interpolation \cite{mcmillan2003}. However, there
+are no corresponding adaptations to synthesis. Incremental induction
+\cite{bradley2011} is another technique for unbounded model checking with an
+equivalent synthesis method \cite{morgenstern2013}, which computes the set of
+safe states incrementally.
 
 \section{Conclusion}
 
