@@ -5,6 +5,7 @@
 \usepackage{subcaption}
 \captionsetup{compatibility=false}
 \usepackage{amsmath}
+\usepackage{mathtools}
 \usepackage{tikz}
 \usetikzlibrary{trees}
 \usetikzlibrary{positioning}
@@ -516,11 +517,13 @@ that cooperates with the device and OS to interface between the two.
     \caption{Tree formulas for Controller and Environment respectively}
     \label{alg:treeFormula}
     \begin{algorithmic}[1]
-        \Function{treeFormula}{gt}
-        \If{$\Call{rank}{gt} = 0$}
-        \State \Return{ $\lnot \Call{E}{x^{gt}}$ }
+        \Function{treeFormula}{$T$}
+        \If{$\Call{rank}{T} = 0$}
+        \State \Return{ $\lnot \Call{E}{X_{T}}$ }
         \Else
-        \State \Return{ $\lnot \Call{E}{x^{gt}} \land \bigwedge_{n \in \Call{succ}{gt}}(\Call{$\delta$}{n} \land \Call{label}{n} \land \Call{treeFormula}{n})$ }
+        \State \Return{$\lnot \Call{E}{X_{T}} \land$ \\
+            $$\bigwedge_{n \in \Call{succ}{T}}(\Call{$\delta$}{X_n, U_n, C_n, X'_n} \land \Call{label}{n} \land \Call{treeFormula}{n})$$
+        }
         \EndIf
         \EndFunction
         \algstore{tf1}
@@ -528,11 +531,12 @@ that cooperates with the device and OS to interface between the two.
 
     \begin{algorithmic}[1]
         \algrestore{tf1}
-        \Function{\textoverline{treeFormula}}{gt}
-        \If{$\Call{rank}{gt} = 0$}
-        \State \Return{\Call{E}{$x^{gt}$}}
+        \Function{\textoverline{treeFormula}}{$T$}
+        \If{$\Call{rank}{T} = 0$}
+        \State \Return{\Call{E}{$X_{T}$}}
         \Else
-        \State \Return{ $\Call{E}{x^{gt}} \lor \bigvee_{n \in \Call{succ}{gt}}(\Call{$\delta$}{n} \land \Call{label}{n} \land \Call{\textoverline{treeFormula}}{n})$ }
+        \State \Return{ $\Call{E}{X_{T}} \lor$ \\
+        $$\bigvee_{n \in \Call{succ}{T}}(\Call{$\delta$}{X_n, U_n, C_n, X'_n} \land \Call{label}{n} \land \Call{\textoverline{treeFormula}}{n})$$ }
         \EndIf
         \EndFunction
     \end{algorithmic}
@@ -950,7 +954,35 @@ been added to the abstraction in a refinement step. If the formula is
 \section{Evaluation}
 
 We evaluate our approach on the benchmarks of the 2015 synthesis competition
-(SYNTCOMP'15). 
+(SYNTCOMP'15). Each benchmark comprises of controllable and uncontrollable
+inputs to a circuit that assigns values to latches. One latch is configured as
+the error bit that determines the winner of the safety game. The benchmark
+suite is a collection of both real-world and toy specifications including
+generalised buffers, AMBA bus controllers, device drivers, and converted LTL
+formulas.  Descriptions of many of the benchmark families used can be found in
+the 2014 competition report~\cite{jacobs2015}. 
+
+The implementation of our algorithm uses \textsc{Glucose}~\cite{audemard2014}
+for SAT solving and \textsc{Periplo}~\cite{rollini2013} for interpolant
+generation. We compared our implementation to two solvers that competed in the
+sequential realisability track of SYNTCOMP'15.  \textsc{Simple BDD
+Solver}~\cite{walker2014} because it had the best results in the track, and
+\textsc{Demiurge}~\cite{bloem2014} because it was the only SAT-based tool to
+compete. The benchmarks were run on a cluster of Intel Quad Core Xeon E5405
+CPUs with 16GB of memory. Each solver was allowed exclusive access to a node
+for one hour to solve an instance.
+
+INSERT GRAPHS
+
+Our implementation was able to solver 103 out of the 250 specification in the
+alloted time, including 10 instances that were unable to be solved by any other
+solver including all other solvers in SYNTCOMP'15. \textsc{Simple BDD Solver}
+and \textsc{Demiurge} were able to solve X and Y respectively. Something about
+us vs BDDs and us vs demiurge with numbers of specs.
+
+Four of the previously unsolved instances are device driver instances and
+another five are toy examples. This supports the hypothesis that different game
+solving methodologies perform better on certain classes of specifications.
 
 \section{Related Work}
 
