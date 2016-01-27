@@ -60,28 +60,41 @@ Reactive systems are ubiquitous in real-world problems such as circuit design,
 industrial automation, or device drivers. Automatic synthesis can provide a
 \emph{correct by construction} controller for a reactive system from a
 specification.  However, the reactive synthesis problem is 2EXPTIME-complete so
-naive algorithms are infeasible on even simple systems.
+naive algorithms are infeasible on anything but simple systems.
 
 Reactive synthesis is formalised as a game between the \emph{controller} and
 its \emph{environment}. In this work we focus on safety games, in which the
 controller must prevent the environment from forcing the game into an error
-state.  Much of the complexity of reactive synthesis stems from tracking the
-set of states in which a player is winning.
+state. In this way the environment is equivalent to an existential search of
+the game and the controller is universal. Much of the complexity of reactive
+synthesis stems from managing the interactions of the alternating quantifiers
+on the state space of the game.
 
 There are several techniques that aim to mitigate this complexity by
 representing states symbolically.  Historically the most successful technique
 has been to use \emph{Binary Decision Diagrams} (BDDs).  BDDs efficiently
 represent a relation on a set of game variables but in the worst case the
-representation may be exponential. This means that BDDs are not a
-one-size-fits-all solution for all reactive synthesis specifications.
+representation may be exponential in the number of variables. This means that
+BDDs are not a one-size-fits-all solution for all reactive synthesis
+specifications.
 
 Advances in SAT solving technology has prompted research into its applicability
 to synthesis as an alternative to BDDs. One approach is to find sets of states
-in CNF \cite{bloem2014}. Another approach is to eschew states and focus on
-\emph{runs} of the game. Previous work has applied this idea to realizability
-of bounded games \cite{narodytska2014} by forming abstract representations of
-the game.  In this paper, we extend this idea to unbounded games by
-constructing approximate sets of winning states from abstract trees.
+in CNF \cite{bloem2014,morgenstern2013}. Another approach is to eschew states
+and focus on \emph{runs} of the game. Previous work has applied this idea to
+realizability of bounded games \cite{narodytska2014} by forming abstractions of
+the game and refining in a counterexample-guided framework. This has been shown
+to outperform BDDs on certain classes of game specifications but is only able
+to find counterexamples of a certain length to the safety property.  In this
+paper, we extend this idea to unbounded games by approximating sets of unsafe
+states from abstract games. Careful construction ensures that a fixed point in
+these sets guarantees completeness.
+
+Section 2 outlines the original bounded synthesis algorithm. In Section 3 we
+describe and prove the correctness of our extension of the algorithm to
+unbounded games. In the following sections we discuss optimisations to the
+algorithm, evaluate our methodology, and compare our approach to other
+synthesis techniques.
 
 \section{Reactive Synthesis}
 
@@ -103,7 +116,7 @@ to a list of assignments to $L_c$ and $L_u$.
 A \emph{controller strategy} $\pi^c : (X, L_u) \to L_c$ is a mapping of states
 and uncontrollable inputs to controllable labels. A controller strategy is
 winning in a bounded game of rank $n$ if all runs $(x_0, u_0, \pi^c(x_0, u_0)),
-(x_1, u_1, \pi^c(x_1, u_1)) \dots (x_n, u_n, \pi^c(x_n, u_n))$ are winning.
+(x_1, u_1, \pi^c(x_1, u_1)) \dots$ $(x_n, u_n, \pi^c(x_n, u_n))$ are winning.
 Bounded \emph{realizability} is the problem of determining the existence of
 such a strategy for a bounded game.
 
@@ -146,8 +159,8 @@ An abstract game tree can be checked for the existence of a winning run by a
 SAT solver\cite{narodytska2014}.  The tree must be encoded into CNF by making
 copies of the transition relation for each game step in tree. The formula must
 also check whether the error state has been reached in no branch
-(\emph{respectively}: in all branches) for the controller (\emph{resp}:
-environment.) The functions that produce these formulas are shown in Algorithm
+(\emph{respectively}: in all branches) for the controller (environment.) The
+functions that produce these formulas are shown in Algorithm
 \ref{alg:treeFormula}.
 
 \begin{algorithm}
@@ -602,7 +615,7 @@ overapproximates the uncontrollable predecessor of $f^m[i]$: $$\forall
 i<k.~B^m[i] \subseteq B^m[i+1], Upre(B^m[i]) \subseteq B^m[i+1].$$
 
 The \emph{must-invariant} guarantees that the must-losing set $B^M$ is an
-underapproximation of the actual losing set $B$: $$B^M \subseteq B$$.
+underapproximation of the actual losing set $B$: $$B^M \subseteq B.$$
 
 The sets $B^m$ and $B^M$ are only modified by the inductive solver, implemented
 by \textsc{learn} and \textoverline{\textsc{learn}} functions.  Below we prove that these
@@ -637,9 +650,10 @@ the may-invariant holds, $\II \cap Upre(i) = \emptyset$, for all $i <
 first post-condition.
 
 Furthermore, the interpolant satisfies $F_1 \rightarrow \II$, i.e., any
-assignment to $X_n$ that satisfies $\sigma(X_T) \land |treeFormula|(T_1)$ also
-satisfies $\II$.  Hence, removing $\II$ from $B^m[\textsc{rank}(n)]$ makes
-$\sigma(X_T) \land |treeFormula|(T_1)$ unsatisfiable, and hence all
+assignment to $X_n$ that satisfies $\sigma(X_T) \land
+\textsc{\textoverline{treeFormula}}(T_1)$ also satisfies $\II$.  Hence,
+removing $\II$ from $B^m[\textsc{rank}(n)]$ makes $\sigma(X_T) \land
+\textsc{\textoverline{treeFormula}}(T_1)$ unsatisfiable, and hence all
 preconditions of the recursive invocation of \textsc{\textoverline{learn}} in
 line~(17) are satisfied.  
 
@@ -754,13 +768,6 @@ to learn clauses, which is similar to our approach but does not unroll the
 game. They also suggest QBF solver, template-based, and Effectively
 Propositional Logic (EPL) approaches.
 
-There are different approaches to bounded synthesis than the one described
-here. The authors of \cite{finkbeiner2013} suggest a methodology directly
-inspired by bounded model checking and it has been adapted to symbolic
-synthesis \cite{ehlers2010}. Lazy synthesis \cite{finkbeiner2012} is a
-counterexample-guided approach to bounded synthesis that refines an
-implementation for the game instead of an abstraction of it.
-
 SAT-based bounded model checking approaches that unroll the transition relation
 have been extended to unbounded by using conflicts in the solver
 \cite{mcmillan2002}, or by interpolation \cite{mcmillan2003}. However, there
@@ -768,6 +775,18 @@ are no corresponding adaptations to synthesis. Incremental induction
 \cite{bradley2011} is another technique for unbounded model checking with an
 equivalent synthesis method \cite{morgenstern2013}, which computes the set of
 safe states incrementally.
+
+There are different approaches to bounded synthesis than the one described
+here. The authors of \cite{finkbeiner2013} suggest a methodology directly
+inspired by bounded model checking and it has been adapted to symbolic
+synthesis \cite{ehlers2010}. Lazy synthesis \cite{finkbeiner2012} is a
+counterexample-guided approach to bounded synthesis that refines an
+implementation for the game instead of an abstraction of it.
+
+The algorithm presented in this paper solves realisability for safety games.
+There is a method for extracting strategies from abstract game trees that is
+compatible with our method \cite{een2015}. It involves a similar interpolation
+approach for discovering states in game tree nodes.
 
 \section{Conclusion}
 
