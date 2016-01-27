@@ -121,7 +121,7 @@ label and the game transitions into a new state according to $\delta$.
 A \emph{run} of a game $(x_0, u_0, c_0), (x_1, u_1, c_1) \dots (x_n, u_n,
 c_n)$ is a chain of state and label pairs s.t.\,$\delta(x_k, u_k, c_k, x_{k+1})$. 
 A run is winning for the controller if $x_0 = I \land \forall i \in \{1..n\} (\lnot E(x_i))$. 
-In a \emph{bounded game} of rank $n$ all runs are restricted to length $n$, whereas unbounded 
+In a \emph{bounded game} with bound $n$ all runs are restricted to length $n$, whereas unbounded 
 games consider runs of infinite length. Since we consider only deterministic games, a run 
 is uniquely described by a list of assignments to $L_c$ and $L_u$.
 
@@ -140,7 +140,7 @@ winning for a bounded game if all runs $(x_0, \pi^e(x_1), c_1), (x_1,
 Safety games are zero sum, therefore the existence of a winning controller strategy
 implies the nonexistence of a winning environment strategy and vice versa.
 
-\subsection{Abstract Game Trees}
+\subsection{Counterexample-guided bounded synthesis}
 
 \tikzset{every node/.style={solid}}
 \tikzstyle{fixed}=[solid]
@@ -186,41 +186,41 @@ implies the nonexistence of a winning environment strategy and vice versa.
                 node [above=4pt] {$\langle s, k \rangle$};
         \end{tikzpicture}
         \captionsetup{width=.8\textwidth}
-        \caption{AGT with strategy}
+        \caption{AGT with partial strategy}
         \label{fig:strategy}
     \end{subfigure}%
-    \begin{subfigure}[t]{.25\textwidth}
-        \centering
-        \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
-            \node [circle,draw] (root){}
-                child {node [circle,draw] {}
-                    child {node [circle,draw] {}
-                        node [left=4pt] {$\epsilon$}
-                        edge from parent [fixed] node [left] {$b$}
-                    }
-                    node [left=4pt] {$\beta$}
-                    edge from parent [fixed] node [left] {$a$}
-                }
-                child {node [circle,draw] (sroot) {}
-                    child {node [below left=0 and -10pt] (sa) {}
-                        edge from parent [draw=none]
-                    }
-                    child {node [below right=0 and -10pt] (sb) {}
-                        edge from parent [draw=none]
-                    }
-                    node [left=4pt] {$\gamma$}
-                    edge from parent [fixed] node [right] {$d$}
-                }
-                node [right=4pt] {$\alpha$}
-                node [above=4pt] {$\langle s, k \rangle$};
-                \draw[unfixed] (sa.center) -- (sb.center);
-                \draw[unfixed] (sroot.south) -- (sa.center);
-                \draw[unfixed] (sroot.south) -- (sb.center);
-        \end{tikzpicture}
-        \captionsetup{width=.8\textwidth}
-        \caption{AGT with spoiling strategy}
-        \label{fig:spoiling}
-    \end{subfigure}%
+%    \begin{subfigure}[t]{.25\textwidth}
+%        \centering
+%        \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
+%            \node [circle,draw] (root){}
+%                child {node [circle,draw] {}
+%                    child {node [circle,draw] {}
+%                        node [left=4pt] {$\epsilon$}
+%                        edge from parent [fixed] node [left] {$b$}
+%                    }
+%                    node [left=4pt] {$\beta$}
+%                    edge from parent [fixed] node [left] {$a$}
+%                }
+%                child {node [circle,draw] (sroot) {}
+%                    child {node [below left=0 and -10pt] (sa) {}
+%                        edge from parent [draw=none]
+%                    }
+%                    child {node [below right=0 and -10pt] (sb) {}
+%                        edge from parent [draw=none]
+%                    }
+%                    node [left=4pt] {$\gamma$}
+%                    edge from parent [fixed] node [right] {$d$}
+%                }
+%                node [right=4pt] {$\alpha$}
+%                node [above=4pt] {$\langle s, k \rangle$};
+%                \draw[unfixed] (sa.center) -- (sb.center);
+%                \draw[unfixed] (sroot.south) -- (sa.center);
+%                \draw[unfixed] (sroot.south) -- (sb.center);
+%        \end{tikzpicture}
+%        \captionsetup{width=.8\textwidth}
+%        \caption{AGT with spoiling strategy}
+%        \label{fig:spoiling}
+%    \end{subfigure}%
     \begin{subfigure}[t]{.25\textwidth}
         \centering
         \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
@@ -320,36 +320,51 @@ implies the nonexistence of a winning environment strategy and vice versa.
 \end{figure}
 
 We review the bounded synthesis algorithm by Narodytska et
-al.~\cite{narodytska2014}, which is the main building block for our unbounded
+al.~\cite{narodytska2014}, which is the main building block of our unbounded
 algorithm.  The algorithm constructs a series of abstractions of the input
-game.  An abstraction restricts actions available to one of the players.
+game.  
+An abstraction restricts actions available to one of the players. 
+%If the player can win the abstract game, then it can also win the original 
+%concrete game; however the opposite is not generally true.
 Specifically, we consider abstractions represented as trees of actions,
-referred to as \emph{abstract game trees}.  Together with a state-round pair
-$\langle s,k\rangle$, an abstract game tree defines an \emph{abstract game}
-played from this state.  Figure~\ref{fig:agt} shows an example abstract game
-tree.  In the abstract game, the environment player is required to pick actions
+referred to as \emph{abstract game trees}.  Figure~\ref{fig:agt} shows an example abstract game
+tree for the controller (abstract game trees for the environment are similar).  In the abstract game, 
+the controller is required to pick actions
 from the tree, starting from the root node.  After reaching a leaf, it
 continues playing unrestricted.  The tree in Figure~\ref{fig:agt} restricts the
-initial environment action to the set $\{a, d\}$.  After choosing action $d$,
-the environment reaches a leaf of the tree and continues playing unrestricted.
-Alternatively, after choosing $a$, the environment is required to play action
-$b$ in the next round.  
+initial controller action to the set $\{a, d\}$.  After choosing action $a$,
+the controller is required to play action $b$ in the next round.  It then reaches a leaf 
+of the tree and continues playing unrestricted.
+The root of the tree is annotated by the initial state $s$ of the abstract game and the 
+bound $k$ on the number of rounds.
+%Together with a state-round pair
+%$\langle s,k\rangle$, an abstract game tree defines an \emph{abstract game}
+%played from this state.
+%Nodes of an abstract game tree are uniquely identified by the list of edge
+%labels along the path from the root to the node.  
+%We identify an abstract game tree with the set of its nodes.  
+We denote $\textsc{nodes}(T)$ the set of all nodes of a tree $T$ and
+$\textsc{leaves}(T)$ the subset of leaf nodes.  
 
-Nodes of an abstract game tree are uniquely identified by the list of edge
-labels along the path from the root to the node.  We identify an abstract game
-tree with the set of its nodes.  For example, the tree in Figure~\ref{fig:agt}
-can be written as $\{(),(d),(a),(a,b)\}$.  We denote $\textsc{leaves}(T)$ the
-subset of leaf nodes of a tree $T$. 
-
-A \emph{partial strategy} $Strat: T \rightarrow L_c $ assigns a controllable
-action to be played in each node of the abstract game tree.
-Figure~\ref{fig:strategy} shows an example partial strategy.  The controller
-starts by choosing action $\alpha$.  If the environment plays $a$, the
-controller responds with $\beta$ in the next round, and so on. Given a partial
+Given a controller (environment)
+abstract game tree $T$ a \emph{partial strategy} $Strat: \textsc{nodes}(T) \rightarrow L_u$ 
+($Strat: \textsc{nodes}(T) \rightarrow L_c$) labels each node of the tree with the opponent's
+action to be played in this node.   
+Figure~\ref{fig:strategy} shows an example partial strategy.  The environment 
+starts by choosing action $\alpha$.  If the controller plays $a$, the
+environment responds with $\beta$ in the next round, and so on. Given a partial
 strategy $Strat$, we can map each leaf $l$ of the abstract game tree to
-$\langle s',i'\rangle=\textsc{outcome}(\langle s, i\rangle, Strat, l)$ obtained
+$\langle s',k'\rangle=\textsc{outcome}(s, k, Strat, l)$, where $s'$ is the state obtained
 by playing all controllable and uncontrollable actions on the path from the
-root to the leaf.
+root to the leaf, and $i'$ is the number of rounds left in the game after reaching the leaf.
+An opponent's partial strategy is winning if for all its outcomes $\langle s',k'\rangle$,
+$s'$ is a winning state for the opponent in the concrete game with bound $k'$.
+
+%The abstract game tree restricts moves available to the player, thus making the game easier
+%to win for the opponent.  Hence, if the opponent does not have a winning partial strategy in
+%the abstract game, it also does not have a winning strategy in the concrete game.  
+
+
 
 %%%A set of runs can be represented symbolically by a tree of valuations to
 %%%controllable and uncontrollable label variables where valuations are allowed to
@@ -400,20 +415,19 @@ root to the leaf.
 %%%strategy is not winning. This forms the basis of a counterexample guided
 %%%abstraction refinement framework \cite{clarke2000} that operates on candidate strategies.
 
-\subsection{Counterexample-guided bounded synthesis}
 
 \begin{algorithm}
     \begin{algorithmic}[1]
-        \Function{solveAbstract}{$p, \langle s, k \rangle , T$}
-        \State $cand \gets $ \Call{findCandidate}{$p, \langle s, k \rangle, T$} \Comment{Look for a candidate}
-        \IIf{$k = n - 1$} \Return $cand$ \EndIIf \Comment{Reached the bound}
+        \Function{solveAbstract}{$p, s, k, T$}
+        \State $cand \gets $ \Call{findCandidate}{$p, s, k, T$} \Comment{Look for a candidate}
+        \IIf{$k = 1$} \Return $cand$ \EndIIf \Comment{Reached the bound}
         \State $T' \gets T$
         \Loop
             \IIf{$cand = \emptyset $} \Return $\emptyset $ \EndIIf \Comment{No candidate: return with no solution}
-            \State $\langle cex, l, u \rangle \gets $ \Call{verify}{$p, \langle s, k \rangle, T, cand$} \Comment{Verify candidate}
+            \State $\langle cex, l, u \rangle \gets $ \Call{verify}{$p, s, k, T, cand$} \Comment{Verify candidate}
             \IIf{$cex = \False$} \Return $cand$ \EndIIf \Comment{No counterexample: return candidate}
-            \State $T' \gets $ \Call{gtAppend}{$T', l, u$} \Comment{Refine AGT with counterexample}
-            \State $cand \gets $ \Call{solveAbstract}{$p, \langle s, k \rangle, T'$} \Comment{Solve refined AGT}
+            \State $T' \gets $ \Call{append}{$T', l, u$} \Comment{Refine AGT with counterexample}
+            \State $cand \gets $ \Call{solveAbstract}{$p, s, k, T'$} \Comment{Solve refined AGT}
         \EndLoop
         \EndFunction
         \algstore{b1}
@@ -421,7 +435,7 @@ root to the leaf.
 
     \begin{algorithmic}
         \algrestore{b1}
-        \Function{findCandidate}{$p, \langle s, k \rangle, T$}
+        \Function{findCandidate}{$p, s, k, T$}
             \State $f \gets $ \IfElse{$p = \texttt{cont}$}{\Call{treeFormula}{$T$}}{\Call{\textoverline{treeFormula}}{$T$}} \EndIfElse
             \State $sol \gets $ \Call{SAT}{$s(X_T) \land f$}
             \If{$sol = \texttt{unsat}$} 
@@ -431,7 +445,7 @@ root to the leaf.
                 \EndIf
                 \State \Return $\emptyset$ \Comment{No candidate exists}
             \Else
-                \State \Return $\{ \langle n, c \rangle | n \in $ \Call{gtNodes}{T} $, c = \Call{sol}{n} \}$ \Comment{Fix candidate moves in $T$}
+                \State \Return $\{ \langle n, c \rangle | n \in $ \Call{gtNodes}{$T$} $, c = \Call{sol}{n} \}$ \Comment{Fix candidate moves in $T$}
             \EndIf
         \EndFunction
         \algstore{b2}
@@ -439,10 +453,10 @@ root to the leaf.
 
     \begin{algorithmic}
         \algrestore{b2}
-        \Function{verify}{$p, \langle s, k\rangle, gt, cand$}
+        \Function{verify}{$p, s, k, T, cand$}
             \For{$l \in leaves(gt)$}
-            \State $\langle k', s'\rangle \gets $ \Call{outcome}{$\langle s, k\rangle, gt, l$} \Comment{Get rank and state at leaf}
-                \State $u \gets $ \Call{solveAbstract}{\Call{opponent}{$p$}, $\langle k', s' \rangle, \emptyset$} \Comment{Solve for the opponent}
+            \State $\langle k', s'\rangle \gets $ \Call{outcome}{$s, k, cand, l$} \Comment{Get rank and state at leaf}
+                \State $u \gets $ \Call{solveAbstract}{\Call{opponent}{$p$}, $k'$, $s'$, $\emptyset$} \Comment{Solve for the opponent}
                 \IIf{$u \neq \emptyset$} \Return $\langle \False, l, u \rangle$ \EndIIf \Comment{Return counterexample}
             \EndFor
             \State \Return $\langle \True, \emptyset, \emptyset \rangle$
@@ -452,20 +466,20 @@ root to the leaf.
     \caption{Bounded Synthesis}
     \label{alg:bounded}
 \end{algorithm}
-    
+
 Algorithm~\ref{alg:bounded} illustrates the bounded synthesis algorithm. The
-algorithm takes a concrete game $G$ as an implicit argument. In addition, it
-takes a player (controller or environment), state-round pair $\langle s,
-k\rangle$ and an abstract game tree $T$ and returns a winning partial strategy
-for it, if one exists.  The initial invocation of the algorithm takes the
-initial state $\langle I, 0\rangle$ and an empty abstract game tree
-$\emptyset$. Initially the solver is playing on behalf of the environment since
+algorithm takes a concrete game $G$ with bound $n$ as an implicit argument. In addition, it
+takes a player $p$ (controller or environment), state $s$, bound
+$k$ and an abstract game tree $T$ and returns a winning partial strategy
+for $opponent(p)$, if one exists.  The initial invocation of the algorithm takes the
+initial state $\langle I, n\rangle$ and an empty abstract game tree
+$\emptyset$.  Initially the solver is playing on behalf of the environment since
 that player takes the first move in every step.  The empty game tree does not
 constrain opponent moves, hence solving such an abstraction is equivalent to
 solving the original concrete game.  The algorithm is organised as a
 counterexample-guided abstraction refinement (CEGAR) loop.  The first step of
-the algorithm uses the \textsc{findCandidate} function, described in detail
-below, to come up with a candidate partial strategy for $T$. If it fails to
+the algorithm uses the \textsc{findCandidate} function, described below, to come 
+up with a candidate partial strategy for $T$. If it fails to
 find a strategy, this means that no winning partial strategy exists for $T$.
 If, on the other hand, a candidate partial strategy is found, we need to verify
 if it is indeed winning for $T$.
@@ -473,8 +487,9 @@ if it is indeed winning for $T$.
 The \textsc{verify} procedure searches for a \emph{spoiling} counterexample
 strategy in each leaf of the candidate partial strategy by calling
 \textsc{solveAbstract} for the opponent. The dual solver solves games on behalf
-of the controller player.  {Figure~\ref{fig:spoiling}} shows a spoiling
-strategy discovered one of the leaves of the partial strategy.
+of the controller player.  
+%{Figure~\ref{fig:spoiling}} shows a spoiling
+%strategy discovered one of the leaves of the partial strategy.
 
 If the dual solver can find no spoiling strategy at any of the leaves, then the
 candidate partial strategy is a winning one. Otherwise, \textsc{verify} returns
