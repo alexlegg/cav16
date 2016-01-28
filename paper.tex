@@ -831,6 +831,39 @@ generalised buffers, AMBA bus controllers, device drivers, and converted LTL
 formulas.  Descriptions of many of the benchmark families used can be found in
 the 2014 competition report~\cite{jacobs2015}. 
 
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[y=0.04cm, x=0.15cm]
+        %axis
+        \draw (0,0) -- coordinate (x axis mid) (60,0);
+            \draw (0,0) -- coordinate (y axis mid) (0,150);
+            %ticks
+            \foreach \x in {0,10,...,60}
+                \draw (\x,1pt) -- (\x,-3pt)
+                node[anchor=north] {\x};
+            \foreach \y in {0,25,...,150}
+                \draw (1pt,\y) -- (-3pt,\y) 
+                    node[anchor=east] {\y}; 
+        %labels      
+        \node[below=0.8cm] at (x axis mid) {Time (min)};
+        \node[rotate=90, above left=1cm and 0.7cm] at (y axis mid) {Instances solved};
+        
+        %Plots
+        \draw plot[mark=x, mark options={fill=white}] file {bench_termite.dat};
+        \draw plot[mark=+, mark options={fill=white}] file {bench_demiurge.dat};
+
+        \begin{scope}[shift={(30,20)}] 
+            \draw (0,0) -- 
+                plot[mark=x, mark options={fill=white}] (0.25,0) -- (0.5,0) 
+                node[right]{Unbounded synthesis};
+            \draw[yshift=\baselineskip] (0,0) -- 
+                plot[mark=+, mark options={fill=white}] (0.25,0) -- (0.5,0)
+                node[right]{Demiurge};
+        \end{scope}
+
+    \end{tikzpicture}
+\end{figure}
+
 The implementation of our algorithm uses \textsc{Glucose}~\cite{audemard2014}
 for SAT solving and \textsc{Periplo}~\cite{rollini2013} for interpolant
 generation. We compared our implementation to two solvers that competed in the
@@ -840,8 +873,6 @@ Solver}~\cite{walker2014} because it had the best results in the track, and
 compete. The benchmarks were run on a cluster of Intel Quad Core Xeon E5405
 CPUs with 16GB of memory. Each solver was allowed exclusive access to a node
 for one hour to solve an instance.
-
-INSERT GRAPHS
 
 Our implementation was able to solver 103 out of the 250 specification in the
 alloted time, including 10 instances that were unable to be solved by any other
