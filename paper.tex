@@ -79,9 +79,9 @@ on the state space of the game.
 
 There are several techniques that aim to mitigate this complexity by
 representing states symbolically.  Historically the most successful technique
-has been to use \emph{Binary Decision Diagrams} (BDDs).  BDDs efficiently
+has been to use \emph{Binary Decision Diagrams}.  BDDs efficiently
 represent a relation on a set of game variables but in the worst case the
-representation may be exponential in the number of variables. This means that
+representation may be exponential in the number of variables. As a result
 BDDs are not a one-size-fits-all solution for all reactive synthesis
 specifications.
 
@@ -92,7 +92,7 @@ and focus on \emph{runs} of the game. Previous work has applied this idea to
 realizability of bounded games \cite{narodytska2014} by forming abstractions of
 the game and refining in a counterexample-guided framework. This has been shown
 to outperform BDDs on certain classes of game specifications but is only able
-to find counterexamples of a certain length to the safety property.  In this
+to find counterexamples to the safety property of a certain length.  In this
 paper, we extend this idea to unbounded games by approximating sets of unsafe
 states from abstract games. Careful construction ensures that a fixed point in
 these sets guarantees completeness.
@@ -146,19 +146,20 @@ We review the bounded synthesis algorithm by Narodytska et
 al.~\cite{narodytska2014}, which is the main building block for our unbounded
 algorithm.
 
-Realisability for a bounded safety game can be solved by checking an
-quantified formula consisting of the game's transition relation \emph{unrolled}
-to the length of the bounded game. The quantifiers represent the two players of
-the game: universal for the controller and existential for the environment.
-Just as the players alternate in choosing actions every step of the game, there
-must be quantifier alternations in the formula for each unrolling.
+Realisability for a bounded safety game can be solved by checking a quantified
+formula consisting of the game's transition relation \emph{unrolled} to the
+length of the bounded game. The quantifiers represent the two players of the
+game: universal for the controller and existential for the environment.  Just
+as the players alternate in choosing actions every step of the game, the
+formula is prefixed by a quantifier alternation over $L_u$ and $L_c$ for each
+step.
 
 Instead of solving both quantifiers at once, two competing solvers are used to
 solve abstractions of the game. Each solver builds a candidate strategy for its
 corresponding player and uses its opponent's candidate to restrict its own
 search. The solvers communicate to refine one another's candidate strategies by
 finding counterexamples. Eventually one solver will be unable to find a
-counterexample indicating that its opponent's candidate strategy is a winning
+counterexample, indicating that its opponent's candidate strategy is a winning
 strategy for the game.
 
 \tikzset{every node/.style={solid}}
@@ -251,15 +252,15 @@ $\textsc{leaves}(T)$ the subset of leaf nodes.
 
 Given a controller (environment)
 abstract game tree $T$ a \emph{partial strategy} $Strat: \textsc{nodes}(T) \rightarrow L_u$ 
-($Strat: \textsc{nodes}(T) \rightarrow L_c$) labels each node of the tree with the opponent's
-action to be played in this node.   
-Figure~\ref{fig:strategy} shows an example partial strategy.  The environment 
-starts by choosing action $\alpha$.  If the controller plays $a$, the
-environment responds with $\beta$ in the next round, and so on. Given a partial
-strategy $Strat$, we can map each leaf $l$ of the abstract game tree to
-$\langle s',i'\rangle=\textsc{outcome}(\langle s, i\rangle, Strat, l)$ obtained
-by playing all controllable and uncontrollable actions on the path from the
-root to the leaf.
+($Strat: \textsc{nodes}(T) \rightarrow L_c$) labels each node of the tree with
+the opponent's action to be played in that node.   Figure~\ref{fig:strategy}
+shows an example partial strategy.  The environment starts by choosing action
+$\alpha$.  If the controller plays $a$, the environment responds with $\beta$
+in the next round, and so on. Given a partial strategy $Strat$, we can map each
+leaf $l$ of the abstract game tree to $\langle
+s',i'\rangle=\textsc{outcome}(\langle s, i\rangle, Strat, l)$ obtained by
+playing all controllable and uncontrollable actions on the path from the root
+to the leaf.
 
 The bounded synthesis algorithm solves abstract game trees by invoking a SAT
 solver to search for candidate partial strategies. Candidate strategies are
@@ -318,15 +319,15 @@ illustrated in Algorithm~\ref{alg:bounded}.
     \label{alg:bounded}
 \end{algorithm}
 
-The algorithm takes a concrete game $G$ with bound $n$ as an implicit argument.
-In addition, it takes a player $p$ (controller or environment), state $s$,
-bound $k$ and an abstract game tree $T$ and returns a winning partial strategy
-for $opponent(p)$, if one exists.  The initial invocation of the algorithm
-takes the initial state $\langle I, n\rangle$ and an empty abstract game tree
-$\emptyset$.  Initially the solver is playing on behalf of the environment
-since that player takes the first move in every step.  The empty game tree does
-not constrain opponent moves, hence solving such an abstraction is equivalent
-to solving the original concrete game.
+The algorithm takes a concrete game $G$ with maximum bound $n$ as an implicit
+argument.  In addition, it takes a player $p$ (controller or environment),
+state $s$, bound $k$ and an abstract game tree $T$ and returns a winning
+partial strategy for $\textsc{opponent}(p)$, if one exists.  The initial
+invocation of the algorithm takes the initial state $\langle I, n\rangle$ and
+an empty abstract game tree $\emptyset$.  Initially the solver is playing on
+behalf of the environment since that player takes the first move in every step.
+The empty game tree does not constrain opponent moves, hence solving such an
+abstraction is equivalent to solving the original concrete game.
 
 The algorithm is organised as a counterexample-guided abstraction refinement
 (CEGAR) loop.  The first step of the algorithm uses the \textsc{findCandidate}
@@ -356,16 +357,16 @@ strategy to be verified at the next iteration of the loop. In the worst case
 the loop terminates after all actions in the game are refined into the abstract
 game.
 
-The way game trees are refined is determined by the formula passed to the SAT
-solver in $\textsc{findCandidate}$. This formula contains CNF encodings of all
-of the unrolled runs represented by an abstract game tree and the winning
-condition of the current player. Runs are encoded by copying the transition
-relation for every step in the abstract game. When playing for the controller,
-the SAT solver searches for a satisfying assignment to the unfixed label
-variables in tree so that none of the runs reaches the error state. The
-environment formulation is satisfiable if any run does reach the error state.
-The formula is constructed recursively from the root of a tree by
-$\textsc{treeFormula}$ (see Algorithm~\ref{alg:treeFormula}).
+Candidates are discovered by passing a formulation of the abstract game tree to
+a SAT solver in $\textsc{findCandidate}$. This formula contains CNF encodings
+of all of the unrolled runs represented by the tree and the winning condition
+of the current player.  Runs are encoded by copying the transition relation for
+every step in the abstract game. When playing for the controller, the SAT
+solver searches for a satisfying assignment to the unfixed label variables in
+tree so that none of the runs reaches the error state. The environment
+formulation is satisfiable if any run does reach the error state.  The formula
+is constructed recursively from the root of a tree by $\textsc{treeFormula}$
+(see Algorithm~\ref{alg:treeFormula}).
 
 Since the game tree formulation is passed to a SAT solver, both controllable
 and uncontrollable unfixed labels will be existentially quantified. This means
@@ -375,9 +376,9 @@ are cooperating then there is no winning run when the opponent is playing
 adversarily. When a winning run is found, the actions chosen by the SAT solver
 are used to refine the game tree. This is advantageous for many synthesis
 problems where the game must be formalised as adversarial for correctness but
-the final implementation will be cooperating with its environment in the real
-world. An example of such a system is a device driver that cooperates with the
-device and OS to interface between the two.
+the final implementation will cooperate with its environment in the real world.
+An example of such a system is a device driver that cooperates with the device
+and OS to provide the interface between the two.
 
 \begin{algorithm}
     \caption{Tree formulas for Controller and Environment respectively}
@@ -432,13 +433,11 @@ computing the states from which the environment can force the game into the
 previous winning set. Eventually this process reaches a fixed point and the
 total set of environment winning states is known.
 
-A similar concept can be applied to the bounded synthesis algorithm to
-iteratively increase the bound of the game and terminate when a fixed point is
-reached. When a strategy is found to be winning on an abstract game tree, we
-record as winning the states from which the opponent could find no
-counterexample. To find these states we use interpolation of subformulas of the
-game tree.
-
+We apply a similar fixed point computation on game states to the bounded
+synthesis algorithm in order to promote it to unbounded games. Our unbounded
+procedure iteratively executes the bounded algorithm while recording states
+from abstract game trees. By carefully managing the way states are recorded we
+guarantee that a fixed point proves the controller's strategy correct.
 
 \subsection{Extending Bounded Synthesis to Unbounded Games}
 
@@ -495,20 +494,19 @@ represented by nodes in the tree are losing for whichever player could not find
 a winning candidate and can be extracted from the tree using interpolation.
 
 The states in an abstract game with no controller candidate are
-\emph{must-losing}. The controller will never be able to avoid the error state
-from these states.
+\emph{must-losing}. The environment can always force the game into the error
+states from these states.
 
-From abstractions with no environment candidate we record the complement states
-as \emph{may-losing}. We maintain a set of states for every rank up the current
-bound. The states we learn while executing the bounded algorithm can only said
-to be controller-winning for a particular rank or below. However, we construct
-each set carefully such that it is monotonically larger than the set of the
-rank below
-%(see Figure \ref{fig:maylosing})
-and so that the environment is unable to force play from one set to the next.
-Due to this careful construction, when two adjacent sets become equivalent we
-know that the algorithm has reached a fixed point and the controller is winning
-in the unbounded game (line 6).
+From abstractions with no environment candidate we record the complement of
+states in the tree as \emph{may-losing}. The environment cannot reach the error
+state in a number of steps equal to the distance to the bottom of the tree.
+
+We maintain a set of states for each rank up to the current bound. We maintain
+an invariant over these sets via careful construction so that they are
+monotonically increasing by rank. We also ensure that the environment is unable
+to force play from one set to the next. Due to these invariants, when two
+adjacent sets become equivalent we know that the algorithm has reached a fixed
+point and the controller is winning in the unbounded game (line 6).
 
 %%%\begin{figure}
 %%%    \centering
@@ -528,12 +526,12 @@ in the unbounded game (line 6).
 
 \subsection{Learning States with Interpolants}
 
-Given two formulas $A$ and $B$ such that $A \land B$ is unsatisfiable, it is
-possible to construct a Craig interpolant\cite{craig1957} $\mathcal{I}$ such
-that $A \to \mathcal{I}$, $B \land \mathcal{I}$ is unsatisfiable, and
-$\mathcal{I}$ refers only to the intersection of variables in $A$ and $B$.  An
-interpolant can be constructed efficiently from a resolution proof of the
-unsatisfiability of $A \land B$ \cite{pudlak1997}.
+Given two formulas $F_1$ and $F_2$ such that $F_1 \land F_2$ is unsatisfiable,
+it is possible to construct a Craig interpolant\cite{craig1957} $\mathcal{I}$
+such that $F_1 \to \mathcal{I}$, $F_2 \land \mathcal{I}$ is unsatisfiable, and
+$\mathcal{I}$ refers only to the intersection of variables in $F_1$ and $F_2$.
+An interpolant can be constructed efficiently from a resolution proof of the
+unsatisfiability of $F_1 \land F_2$ \cite{pudlak1997}.
 
 \begin{figure}
     \centering
@@ -622,12 +620,11 @@ states that lose to $b$.
 
 This is the foundation for a recursive algorithm that consumes an entire tree
 by removing a single step on each iteration (Algorithm \ref{alg:learn}). All
-learned states from which the controller \emph{must} lose are recorded in a set
-of \emph{bad} states $B^M$.  This algorithm can also be performed on
-environment-losing trees with the caveat that any state learnt at a node of
-rank $n$ is only known to lose at ranks less than or equal to $n$. We negate
-the interpolants we learn this way and record them in a mapping of ranks to
-sets of states $B^m$ which \emph{may} be bad states for the controller.
+learned states from which the controller must lose are recorded in a set of bad
+states $B^M$. Environment-losing are learned in the same way but are recorded
+by removing the state from a set of sets of controller may-losing states $B^m$.
+An environment-losing state of rank $n$ is removed from every set at rank $n$
+and lower.
 
 \subsection{Correctness}
 
@@ -695,7 +692,7 @@ We prove that postconditions of \textsc{\textoverline{learn}} are satisfied
 assuming that its preconditions hold.
 
 Line~(11) splits the tree $T$ into $T_1$ and $T_2$, such that $T_2$ has depth
-1.  Consider formulas $f_1=\sigma(X_T) \land
+1.  Consider formulas $F_1=\sigma(X_T) \land
 \textsc{\textoverline{treeFormula}}(T_1)$ and $F_2 =
 \textsc{\textoverline{treeFormula}}(T_2)$.  These formulas only share variables
 $X_n$.  Their conjunction $F_1 \land F_2$ is unsatisfiable, as by construction
@@ -799,7 +796,7 @@ learn more states by increasing the reachable set. In our benchmarks we have
 observed that this optimisation is beneficial on the first few iterations of
 \textsc{checkRank}.
 
-\subsection{Choosing sensible opponent moves}
+\subsection{Choosing opponent moves}
 
 One aspect of the algorithm proposed by Narodytska et al.~\cite{narodytska2014}
 is that it mimics real-world uses of synthesis by allowing cooperation between
