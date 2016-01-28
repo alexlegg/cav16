@@ -66,36 +66,71 @@
 Reactive systems are ubiquitous in real-world problems such as circuit design,
 industrial automation, or device drivers. Automatic synthesis can provide a
 \emph{correct by construction} controller for a reactive system from a
-specification.  However, the reactive synthesis problem is 2EXPTIME-complete so
-naive algorithms are infeasible on anything but simple systems.
-
-Reactive synthesis is formalised as a game between the \emph{controller} and
+specification.  Reactive synthesis is formalised as a game between the \emph{controller} and
 its \emph{environment}. In this work we focus on safety games, in which the
 controller must prevent the environment from forcing the game into an error
-state. In this way the environment is equivalent to an existential search of
-the game and the controller is universal. Much of the complexity of reactive
-synthesis stems from managing the interactions of the alternating quantifiers
-on the state space of the game.
+state.
 
+The reactive synthesis problem is 2EXPTIME-complete so
+naive algorithms are infeasible on anything but simple systems.
+% In this way the environment is equivalent to an existential search of
+%the game and the controller is universal. Much of the complexity of reactive
+%synthesis stems from managing the interactions of the alternating quantifiers
+%on the state space of the game.
 There are several techniques that aim to mitigate this complexity by
-representing states symbolically.  Historically the most successful technique
-has been to use \emph{Binary Decision Diagrams}.  BDDs efficiently
-represent a relation on a set of game variables but in the worst case the
-representation may be exponential in the number of variables. As a result
-BDDs are not a one-size-fits-all solution for all reactive synthesis
-specifications.
+representing states and transitions of the system symbolically~\cite{Piterman_PS_06,bloem2014,morgenstern2013}. 
+These techniques incrementally construct a symbolic representation of the set of 
+discovered winning states of the game.  The downside of this approach is that 
+keeping track of all discovered winning states can lead to a space explosion even
+when using efficient symbolic representation such as BDDs or CNFs.
 
-Advances in SAT solving technology has prompted research into its applicability
-to synthesis as an alternative to BDDs. One approach is to find sets of states
-in CNF \cite{bloem2014,morgenstern2013}. Another approach is to eschew states
-and focus on \emph{runs} of the game. Previous work has applied this idea to
-realizability of bounded games \cite{narodytska2014} by forming abstractions of
-the game and refining in a counterexample-guided framework. This has been shown
-to outperform BDDs on certain classes of game specifications but is only able
-to find counterexamples to the safety property of a certain length.  In this
-paper, we extend this idea to unbounded games by approximating sets of unsafe
-states from abstract games. Careful construction ensures that a fixed point in
-these sets guarantees completeness.
+%Historically the most successful technique
+%has been to use \emph{Binary Decision Diagrams}.  BDDs efficiently
+%represent a relation on a set of game variables but in the worst case the
+%representation may be exponential in the number of variables. As a result
+%BDDs are not a one-size-fits-all solution for all reactive synthesis
+%specifications.
+
+%Advances in SAT solving technology has prompted research into its applicability
+%to synthesis as an alternative to BDDs. One approach is to find sets of states
+%in CNF \cite{bloem2014,morgenstern2013}. 
+
+An alternative approach, proposed by Narodytska et al.~\cite{narodytska2014},
+is to eschew states and focus on \emph{runs} of the game.  The method works by
+exploring a subset of the concrete runs of the game and proving that these runs can be
+generalised into a winning strategy on behalf of one of the players. In contrast to 
+other existing synthesis methods, it does not store,
+in either symbolic or explicit form, the set of winning states.
+Instead, it uses counterexample-guided backtracking search to identify a small subset
+of runs that are sufficient to solve the game.
+
+This method has been shown to outperform BDDs on certain classes of games; however it
+suffers from an important limitation: it is only able to solve games with a bounded number
+of rounds.  In case of safety games, this means proving that the controller 
+can keep the game within the safe region for a bounded number of steps.  
+This is insufficient in most practical situations that require unbounded realizability.
+
+%Previous work has applied this idea to
+%realizability of bounded games \cite{narodytska2014} by forming abstractions of
+%the game and refining in a counterexample-guided framework.   
+
+In this paper, we extend the method by Narodytska et al.~\cite{narodytska2014} to unbounded 
+safety games.  To this end we enhance the method with computational learning: every time
+the search algorithm discovers a new counterexample, the learning procedure analyzes the 
+counterexample, extracting a subset of states winning for one of the players from it.  
+The learning procedure ensures that reaching a fixed point in these sets is sufficient to establish 
+unbounded realizability.
+Our method can be seen as a hybrid between the counterexample-guided algorithm by
+Narodytska et al. and methods based on winning set computation: we use the former to guide 
+the search, while we rely on the latter to ensure convergence.
+
+We evaluate our method on the benchmarks of the 2015 synthesis competition
+(SYNTCOMP'15).  While our solver solves fewer total instances than competitors,
+it solves the largest number of unique instances, i.e., instances that could not be solved by 
+any other solver.  These results confirm that there exist classes of problems that are
+hard for traditional synthesis techniques, but can be efficiently solved by our method.
+While further performance improvements are clearly needed, in its current state the method 
+can be used in a portfolio solver to increase the number of tractable instances.
 
 Section 2 outlines the original bounded synthesis algorithm. In Section 3 we
 describe and prove the correctness of our extension of the algorithm to
@@ -297,7 +332,7 @@ illustrated in Algorithm~\ref{alg:bounded}.
                 \EndIf
                 \State \Return $\emptyset$ \Comment{No candidate exists}
             \Else
-                \State \Return $\{ \langle n, c \rangle | n \in $ \Call{gtNodes}{$T$} $, c = \Call{sol}{n} \}$ \Comment{Fix candidate moves in $T$}
+                \State \Return $\{ \langle n, c \rangle | n \in $ \Call{nodes}{$T$} $, c = \Call{sol}{n} \}$ \Comment{Fix candidate moves in $T$}
             \EndIf
         \EndFunction
         \algstore{b2}
