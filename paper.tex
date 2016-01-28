@@ -949,6 +949,17 @@ approach for discovering states in game tree nodes.
 
 \section{Conclusion}
 
+We presented an extension to an existing bounded synthesis technique that
+promotes it to unbounded safety games. The approach taken as whole differs
+other synthesis techniques by operating in a counterexample guided abstraction
+refinement loop instead of attempting to construct a winning region. The
+results show that our approach is useful for solving some classes of games that
+have never previously been solved.
+
+Future work includes incorporating the solver into a parallel suite of
+communicating solver~\cite{bloem2014}. We also aim experiment with
+optimisations by focusing on heuristics for avoiding unhelpful actions as well
+as constructing more succinct representations of interpolants.
 
 \bibliographystyle{splncs03}
 \bibliography{paper}
