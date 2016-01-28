@@ -842,7 +842,7 @@ the 2014 competition report~\cite{jacobs2015}.
                 \draw (1pt,\y) -- (-3pt,\y) 
                     node[anchor=east] {\y}; 
         %labels      
-        \node[below=0.8cm] at (x axis mid) {Time (min)};
+        \node[below=0.8cm] at (x axis mid) {Time (minutes)};
         \node[rotate=90, above left=1cm and 0.7cm] at (y axis mid) {Instances solved};
         
         %Plots
@@ -863,23 +863,58 @@ the 2014 competition report~\cite{jacobs2015}.
 
 The implementation of our algorithm uses \textsc{Glucose}~\cite{audemard2014}
 for SAT solving and \textsc{Periplo}~\cite{rollini2013} for interpolant
-generation. We compared our implementation to two solvers that competed in the
-sequential realisability track of SYNTCOMP'15.  \textsc{Simple BDD
-Solver}~\cite{walker2014} because it had the best results in the track, and
-\textsc{Demiurge}~\cite{bloem2014} because it was the only SAT-based tool to
-compete. The benchmarks were run on a cluster of Intel Quad Core Xeon E5405
-CPUs with 16GB of memory. Each solver was allowed exclusive access to a node
-for one hour to solve an instance.
+generation. We compared our implementation to
+\textsc{Demiurge}~\cite{bloem2014}, the only SAT-based solver to compete in the
+sequential realisability track of SYNTCOMP'15. The benchmarks were run on a
+cluster of Intel Quad Core Xeon E5405 CPUs with 16GB of memory.  Each solver
+was allowed exclusive access to a node for one hour to solve an instance.
 
 Our implementation was able to solver 103 out of the 250 specification in the
-alloted time, including 10 instances that were unable to be solved by any other
-solver including all other solvers in SYNTCOMP'15. \textsc{Simple BDD Solver}
-and \textsc{Demiurge} were able to solve X and Y respectively. Something about
-us vs BDDs and us vs demiurge with numbers of specs.
+alloted time, including 12 instances that were unable to be solved by any other
+solver in SYNTCOMP'15. \textsc{Demiurge} was able to solve 136 specifications.
+77 of those instances were also solved by our implementation, so
+\textsc{Demiurge} solved 59 instances that our solver did not. However, our
+method was able to solve 26 specifications not solved by \textsc{Demiurge}.
 
-Four of the previously unsolved instances are device driver instances and
-another five are toy examples. This supports the hypothesis that different game
-solving methodologies perform better on certain classes of specifications.
+For reference, the results of the synthesis competition are shown in
+Figure~\ref{fig:syntcomp}. The competition ran on better hardware with a longer
+time period, which explains why \textsc{Demiurge} performed better.
+
+\begin{figure}
+    \centering
+    \setlength{\tabcolsep}{8pt}
+    \begin{tabular}{l | r | r }
+        \textbf{Solver} & \textbf{Solved} & \textbf{Unique} \\
+        \hline
+        Simple BDD Solver (2) & 195 & 10 \\
+        AbsSynthe (seq2) & 187 & 2 \\
+        Simple BDD Solver (1) & 185 & \\
+        AbsSynthe (seq3) & 179 & \\
+        Realizer (sequential) & 179 & \\
+        AbsSynthe (seq1) & 173 & 1 \\
+        Demiurge (D1real) & 139 & 5 \\
+        Aisy & 98 & \\
+        \hline
+        Unbounded Synthesis & 103 & 12 \\
+    \end{tabular}
+    \caption{Synthesis Competition 2015 Results}
+    \label{fig:syntcomp}
+\end{figure}
+
+Five of the instances unique to our solver are device driver instances and
+another five are from the \texttt{stay} family, which are classified as toy
+instances.  Out of the 26 instances that \textsc{Demiurge} could not solve,
+there were only 6 different benchmark classes. This supports the hypothesis
+that different game solving methodologies perform better on certain classes of
+specifications.
+
+Whilst our solver is unable to solve as many instances as other tools yet, it
+was able to solve more unique instances than any solver in the competition.
+This shows that the method has potential. In the parallel track,
+\textsc{Demiurge} competes with a suite of 3 separate but communicating
+solvers. The solvers relay unsafe states to one another, which is compatible
+with the set $B^M$ in our solver. It remains future work to explore the
+possibility of combining these solvers.
 
 \section{Related Work}
 
