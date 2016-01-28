@@ -166,7 +166,7 @@ strategy for the game.
 \tikzstyle{unfixed}=[dash pattern = on 2pt off 2pt]
 \begin{figure}
     \centering
-    \begin{subfigure}[t]{.25\textwidth}
+    \begin{subfigure}[t]{.32\textwidth}
         \centering
         \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
             \node [circle,draw] (root){}
@@ -185,7 +185,7 @@ strategy for the game.
         \caption{AGT}
         \label{fig:agt}
     \end{subfigure}%
-    \begin{subfigure}[t]{.25\textwidth}
+    \begin{subfigure}[t]{.32\textwidth}
         \centering
         \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
             \node [circle,draw] (root){}
@@ -208,7 +208,7 @@ strategy for the game.
         \caption{AGT with partial strategy}
         \label{fig:strategy}
     \end{subfigure}%
-    \begin{subfigure}[t]{.25\textwidth}
+    \begin{subfigure}[t]{.32\textwidth}
         \centering
         \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
             \node [circle,draw] (root){}
@@ -477,45 +477,54 @@ game tree.
     \label{alg:unbounded}
 \end{algorithm}
 
-The unbounded synthesis algorithm (Algorithm \ref{alg:unbounded}) effectively
-consists of two communicating solvers: the counterexample-guided bounded
-reachability solver and the unbounded solver based on incremental induction.
-The unbounded solver calls the bounded solver with an increasing bound (line 8)
-while learning states from abstract game trees that either must or may lose for
-the controller. When the initial state is contained within the must-losing
-states the game is known to be unrealisable (line 5).
+The unbounded synthesis algorithm enhances the bounded method with
+computational learning. States are carefully recorded from unsatisfiable
+abstract games while maintaining an invariant ensuring the monotonicity of
+learning.
 
-May-losing states are learned by removing controller-winning states. We
-maintain a set of states for every rank up the current bound. The states we
-learn while executing the bounded algorithm can only said to be
-controller-winning for a particular rank or below. However, we construct each
-set carefully such that it is monotonically larger than the set of the rank
-below (see Figure \ref{fig:maylosing}) and so that the environment is unable to
-force play from one set to the next. Due to this careful construction, when two
-adjacent sets become equivalent we know that the algorithm has reached a fixed
-point and the controller is winning in the unbounded game (line 6).
-
-\begin{figure}
-    \centering
-    \begin{tikzpicture}
-        \node [minimum size=2cm,circle,draw] (a){$B^m[n]$};
-        \node [minimum size=1.5cm,circle,draw,right=1.8cm of a] (b){$B^m[n-1]$};
-        \node [minimum size=1cm,right=1.5cm of b] (dots){$\dots$};
-        \node [minimum size=0.5cm,circle,draw,right=1.5cm of dots] (c){$B^m[0]$};
-        \draw[-latex] (a.east) -- node [above] {$\supset$} (b.west);
-        \draw[-latex] (b.east) -- node [above] {$\supset$} (dots);
-        \draw[-latex] (dots.east) -- node [above] {$\supset$} (c.west);
-    \end{tikzpicture}
-    \caption{May-losing states}
-    \label{fig:maylosing}
-\end{figure}
-
+During the CEGAR loop of the bounded algorithm, each of the competing solvers
+searches for satisfying assignments of labels to abstract game trees. When the
+abstract game is unsatisfiable this indicates that the states represented by
+nodes in the abstract game tree are losing for the current player. We extract
+these states from the game tree using interpolation.
 
 When executing the unbounded solver, lines 18 and 19 become active in the
 bounded solver. These lines call the learning procedures when the solver fails
 to find a candidate for an abstract game tree. The states symbolically
 represented by nodes in the tree are losing for whichever player could not find
 a winning candidate and can be extracted from the tree using interpolation.
+
+The states in an abstract game with no controller candidate are
+\emph{must-losing}. The controller will never be able to avoid the error state
+from these states.
+
+From abstractions with no environment candidate we record the complement states
+as \emph{may-losing}. We maintain a set of states for every rank up the current
+bound. The states we learn while executing the bounded algorithm can only said
+to be controller-winning for a particular rank or below. However, we construct
+each set carefully such that it is monotonically larger than the set of the
+rank below
+%(see Figure \ref{fig:maylosing})
+and so that the environment is unable to force play from one set to the next.
+Due to this careful construction, when two adjacent sets become equivalent we
+know that the algorithm has reached a fixed point and the controller is winning
+in the unbounded game (line 6).
+
+%%%\begin{figure}
+%%%    \centering
+%%%    \begin{tikzpicture}
+%%%        \node [minimum size=2cm,circle,draw] (a){$B^m[n]$};
+%%%        \node [minimum size=1.5cm,circle,draw,right=1.8cm of a] (b){$B^m[n-1]$};
+%%%        \node [minimum size=1cm,right=1.5cm of b] (dots){$\dots$};
+%%%        \node [minimum size=0.5cm,circle,draw,right=1.5cm of dots] (c){$B^m[0]$};
+%%%        \draw[-latex] (a.east) -- node [above] {$\supset$} (b.west);
+%%%        \draw[-latex] (b.east) -- node [above] {$\supset$} (dots);
+%%%        \draw[-latex] (dots.east) -- node [above] {$\supset$} (c.west);
+%%%    \end{tikzpicture}
+%%%    \caption{May-losing states}
+%%%    \label{fig:maylosing}
+%%%\end{figure}
+
 
 \subsection{Learning States with Interpolants}
 
@@ -528,18 +537,28 @@ unsatisfiability of $A \land B$ \cite{pudlak1997}.
 
 \begin{figure}
     \centering
+%%%    \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
+%%%        \node [circle,draw] (root){}
+%%%            child {node [circle,draw] {}
+%%%                child {node [circle,draw] {}
+%%%                    edge from parent [fixed] node [left] {$b$}
+%%%                }
+%%%                edge from parent [fixed] node [left] {$a$}
+%%%            }
+%%%            child {node [circle,draw] {}
+%%%                edge from parent [fixed] node [right] {$d$}
+%%%            }
+%%%            node [above=4pt] {$\langle s, k \rangle$};
+%%%    \end{tikzpicture}
     \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
         \node [] (root){}
-            child {node [circle,draw,label=left:$x_1$] {}
+        child {node [circle,draw] {}
                 child {node [circle,draw] {}
-                    child {node [circle,draw,label=left:$x_0^0$] {} edge from parent[unfixed]}
-                    edge from parent [fixed] node [left] {$u_1$}
+                    edge from parent [fixed] node [left] {$a$}
                 }
                 child {node [circle,draw] {} edge from parent[unfixed]
-                    child {node [circle,draw,label=right:$x_0^1$] {} edge from parent[unfixed]}
-                    edge from parent [fixed] node [right] {$u_2$}
+                    edge from parent [fixed] node [right] {$b$}
                 }
-                edge from parent [unfixed]
             };
     \end{tikzpicture}
 %%%    \begin{tikzpicture}[overlay]
@@ -550,19 +569,19 @@ unsatisfiability of $A \land B$ \cite{pudlak1997}.
 \end{figure}
 
 Consider the snippet of a game tree in Figure \ref{fig:interpolatetree}. The
-tree is losing for the controller, the node labelled $x_1$ is at rank 1, and
-$x_0^0$ and $x_0^1$ are at rank 0. Since the tree is controller-losing we know
-that at least one run represented by the tree contains the error state.  As
-a result, $\textsc{treeFormula}(gt)$ is unsatisfiable. If we take the step
-$x_1$ to $x_0^0$ and cut it from the rest of the tree then
-$\textsc{treeFormula}(step) \land \textsc{treeFormula}(parent)$ must too be
-unsatisfiable.
+tree is losing for the controller, the topmost node is at rank 1, and the $a$ and
+$b$ nodes are at rank 0. Since the tree is controller-losing we know that at
+least one state in the tree will uncontrollably lead to the error state.  As a
+result, $\textsc{treeFormula}(T)$ is unsatisfiable. If we take a step of the
+tree, such as the step where the environment plays $a$, and cut it from the
+rest of the tree then $\textsc{treeFormula}(step) \land
+\textsc{treeFormula}(parent)$ must too be unsatisfiable.
 
-We can construct an interpolant with $A = \textsc{treeFormula}(parent)$ and $B
-= \textsc{treeFormula}(step)$. The only variables shared between $A$ and $B$
-are the state variables at $x_1$. We know that $B \land \mathcal{I}$ is
-unsatisfiable, therefore all states in $\mathcal{I}$ must lose to the
-uncontrollable label $u_1$. We also know that $A \to \mathcal{I}$, thus
+We can construct an interpolant with $F_1 = \textsc{treeFormula}(parent)$ and
+$F_2 = \textsc{treeFormula}(step)$. The only variables shared between $F_1$ and
+$F_2$ are the state variables at rank 1. We know that $F_2 \land \mathcal{I}$
+is unsatisfiable, therefore all states in $\mathcal{I}$ must lose to the
+uncontrollable action $a$. We also know that $F_1 \to \mathcal{I}$, thus
 $\mathcal{I}$ contains all states reachable by the parent tree (on runs that
 avoid the error state.)
 
@@ -593,13 +612,13 @@ avoid the error state.)
     \end{algorithmic}
 \end{algorithm}
 
-Now we can consider the step $x_1$ to $x_0^1$, and the parent - now without
-either $x_1 \to x_0^0$ or $x_1 \to x_0^1$. The formula
+Now we can consider the step where the environment plays $b$, and the parent
+now without either step in the snippet. The formula
 $(\textsc{treeFormula}(parent) \land \mathcal{I}) \land
-\textsc{treeFormula}(step)$ must be unsatisfiable. $\mathcal{I}$ contains all
-states that lose to $u_1$ so any other state reachable at $x_1$ must lose to
-$u_2$. Therefore we can compute another interpolant that contains states that
-lose to $u_2$.
+\textsc{treeFormula}(step)$ must be unsatisfiable.  $\mathcal{I}$ contains all
+states that lose to $a$ so any other state reachable at rank 1 in this subtree
+must lose to $b$.  Therefore we can compute another interpolant that contains
+states that lose to $b$.
 
 This is the foundation for a recursive algorithm that consumes an entire tree
 by removing a single step on each iteration (Algorithm \ref{alg:learn}). All
@@ -660,7 +679,7 @@ of the bounded solver has been established in \cite{narodytska2014}.
 
 We define two global invariants of the algorithm.  The \emph{may-invariant}
 states that sets $B^m[i]$ grows monotonically with $i$ and that each $B^m[i+1]$
-overapproximates the uncontrollable predecessor of $f^m[i]$: $$\forall
+overapproximates the uncontrollable predecessor of $B^m[i]$: $$\forall
 i<k.~B^m[i] \subseteq B^m[i+1], Upre(B^m[i]) \subseteq B^m[i+1].$$
 
 The \emph{must-invariant} guarantees that the must-losing set $B^M$ is an
