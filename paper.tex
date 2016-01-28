@@ -661,6 +661,10 @@ by removing the state from a set of sets of controller may-losing states $B^m$.
 An environment-losing state of rank $n$ is removed from every set at rank $n$
 and lower.
 
+We compile interpolants into DNF cubes by constructing a temporary BDD. This
+smaller representation is necessary for maintaining the size of formulas passed
+to the SAT solver. However, it can occaisionally lead to state explosion.
+
 \subsection{Correctness}
 
 \begin{algorithm}
@@ -985,16 +989,21 @@ approach for discovering states in game tree nodes.
 \section{Conclusion}
 
 We presented an extension to an existing bounded synthesis technique that
-promotes it to unbounded safety games. The approach taken as whole differs
-other synthesis techniques by operating in a counterexample guided abstraction
-refinement loop instead of attempting to construct a winning region. The
-results show that our approach is useful for solving some classes of games that
-have never previously been solved.
+promotes it to unbounded safety games. The approach taken as whole differs from
+other synthesis techniques by combining counterexample guided game solving with
+winning set computation. The results show that our approach is able to solve
+more unique instances than other solvers by performing well on certain classes
+of games that are hard for other methodologies.
 
 Future work includes incorporating the solver into a parallel suite of
-communicating solver~\cite{bloem2014}. We also aim experiment with
-optimisations by focusing on heuristics for avoiding unhelpful actions as well
-as constructing more succinct representations of interpolants.
+communicating solvers~\cite{bloem2014}. There is evidence that different
+solvers perform well on different classes of games. Thus we hypothesise that
+the way forward for synthesis tools is to combine the efforts of many different
+techniques.
+
+We also aim to experiment with optimisations by focusing on heuristics for
+avoiding unhelpful actions as well as constructing succinct representations of
+interpolants without resorting to BDDs.
 
 \bibliographystyle{splncs03}
 \bibliography{paper}
