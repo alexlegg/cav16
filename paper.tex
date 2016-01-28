@@ -123,7 +123,7 @@ c_n)$ is a chain of state and label pairs s.t.\,$\delta(x_k, u_k, c_k, x_{k+1})$
 A run is winning for the controller if $x_0 = I \land \forall i \in \{1..n\} (\lnot E(x_i))$. 
 In a \emph{bounded game} of rank $n$ all runs are restricted to length $n$, whereas unbounded 
 games consider runs of infinite length. Since we consider only deterministic games, a run 
-is uniquely described by a list of assignments to $L_c$ and $L_u$.
+is uniquely described by a list of assignments to $L_u$ and $L_c$.
 
 A \emph{controller strategy} $\pi^c : (X, L_u) \to L_c$ is a mapping of states
 and uncontrollable inputs to controllable labels. A controller strategy is
@@ -139,6 +139,27 @@ winning for a bounded game if all runs $(x_0, \pi^e(x_1), c_1), (x_1,
 \pi^e(x_1), c_1) \dots (x_n, \pi^e(x_n), c_n)$ are winning for the environment.
 Safety games are zero sum, therefore the existence of a winning controller strategy
 implies the nonexistence of a winning environment strategy and vice versa.
+
+\subsection{Realisability of Bounded Safety Games}
+
+We review the bounded synthesis algorithm by Narodytska et
+al.~\cite{narodytska2014}, which is the main building block for our unbounded
+algorithm.
+
+Realisability for a bounded safety game can be solved by checking an
+quantified formula consisting of the game's transition relation \emph{unrolled}
+to the length of the bounded game. The quantifiers represent the two players of
+the game: universal for the controller and existential for the environment.
+Just as the players alternate in choosing actions every step of the game, there
+must be quantifier alternations in the formula for each unrolling.
+
+Instead of solving both quantifiers at once, two competing solvers are used to
+solve abstractions of the game. Each solver builds a candidate strategy for its
+corresponding player and uses its opponent's candidate to restrict its own
+search. The solvers communicate to refine one another's candidate strategies by
+finding counterexamples. Eventually one solver will be unable to find a
+counterexample indicating that its opponent's candidate strategy is a winning
+strategy for the game.
 
 \subsection{Abstract Game Trees}
 
@@ -243,97 +264,21 @@ implies the nonexistence of a winning environment strategy and vice versa.
         \caption{Refined AGT}
         \label{fig:refined}
     \end{subfigure}
-%%%    \begin{subfigure}{.3\textwidth}
-%%%        \centering
-%%%        \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
-%%%            \node [circle,draw] (root){}
-%%%                child {node [circle,draw] {} edge from parent[unfixed]
-%%%                    child {node [circle,draw] {} edge from parent[unfixed]}
-%%%                };
-%%%        \end{tikzpicture}
-%%%        \caption{An empty AGT}
-%%%        \label{fig:emptytree}
-%%%    \end{subfigure}%
-%%%    \begin{subfigure}{.35\textwidth}
-%%%        \centering
-%%%        \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
-%%%            \node [circle,draw] (root) {}
-%%%                child {node [circle,draw] {}
-%%%                    child {node [circle,draw] {} edge from parent[unfixed]}
-%%%                    edge from parent [fixed] node [left] {$u_1$}
-%%%                };
-%%%        \end{tikzpicture}
-%%%        \caption{Environment candidate}
-%%%        \label{fig:candidate}
-%%%    \end{subfigure}
-
-
-%%%    \begin{subfigure}{.4\textwidth}
-%%%        \centering
-%%%        \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
-%%%            \node [circle,draw] (root){}
-%%%                child {node [circle,draw] {} edge from parent[unfixed]
-%%%                    child {node [circle,draw] {} edge from parent[fixed] node [left] {$c_1$}}
-%%%                    edge from parent [fixed] node [left] {$u_1$}
-%%%                };
-%%%        \end{tikzpicture}
-%%%        \caption{Counterexample}
-%%%        \label{fig:cex}
-%%%    \end{subfigure}%
-%%%    \begin{subfigure}{.3\textwidth}
-%%%        \centering
-%%%        \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
-%%%            \node [circle,draw] (root){}
-%%%                child {node [circle,draw] {} edge from parent[unfixed]
-%%%                    child {node [circle,draw] {} edge from parent[fixed] node [left] {$c_1$}}
-%%%                };
-%%%        \end{tikzpicture}
-%%%        \caption{Refined AGT}
-%%%        \label{fig:refined}
-%%%    \end{subfigure}%
-%%%    \begin{subfigure}{.35\textwidth}
-%%%        \centering
-%%%        \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
-%%%            \node [circle,draw] (root) {}
-%%%                child {node [circle,draw] {}
-%%%                    child {node [circle,draw] {} edge from parent[unfixed]}
-%%%                    edge from parent [fixed] node [left] {$u_2$}
-%%%                };
-%%%        \end{tikzpicture}
-%%%        \caption{New candidate}
-%%%        \label{fig:candidate2}
-%%%    \end{subfigure}%
-%%%    \begin{subfigure}{.4\textwidth}
-%%%        \centering
-%%%        \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
-%%%            \node [circle,draw] (root){}
-%%%                child {node [circle,draw] {} edge from parent[unfixed]
-%%%                    child {node [circle,draw] {} edge from parent[fixed] node [left] {$c_1$}}
-%%%                    child {node [circle,draw] {} edge from parent[fixed] node [right] {$c_2$}}
-%%%                };
-%%%        \end{tikzpicture}
-%%%        \caption{Refined AGT}
-%%%        \label{fig:refined2}
-%%%    \end{subfigure}
     \caption{Abstract game trees}
     \label{fig:alltrees}
 \end{figure}
 
-We review the bounded synthesis algorithm by Narodytska et
-al.~\cite{narodytska2014}, which is the main building block for our unbounded
-algorithm.  The algorithm constructs a series of abstractions of the input
-game.  An abstraction restricts actions available to one of the players.
+An abstraction of the game restricts actions available to one of the players.
 Specifically, we consider abstractions represented as trees of actions,
 referred to as \emph{abstract game trees}.  Together with a state-round pair
 $\langle s,k\rangle$, an abstract game tree defines an \emph{abstract game}
-played from this state.  Figure~\ref{fig:agt} shows an example abstract game
-tree.  In the abstract game, the environment player is required to pick actions
-from the tree, starting from the root node.  After reaching a leaf, it
-continues playing unrestricted.  The tree in Figure~\ref{fig:agt} restricts the
-initial environment action to the set $\{a, d\}$.  After choosing action $d$,
-the environment reaches a leaf of the tree and continues playing unrestricted.
-Alternatively, after choosing $a$, the environment is required to play action
-$b$ in the next round.  
+played from this state.  In the abstract game, the environment player is
+required to pick actions from the tree, starting from the root node.  After
+reaching a leaf, it continues playing unrestricted.  The tree in
+Figure~\ref{fig:agt} restricts the initial environment action to the set $\{a,
+d\}$.  After choosing action $d$, the environment reaches a leaf of the tree
+and continues playing unrestricted.  Alternatively, after choosing $a$, the
+environment is required to play action $b$ in the next round.  
 
 Nodes of an abstract game tree are uniquely identified by the list of edge
 labels along the path from the root to the node.  We identify an abstract game
@@ -351,56 +296,13 @@ $\langle s',i'\rangle=\textsc{outcome}(\langle s, i\rangle, Strat, l)$ obtained
 by playing all controllable and uncontrollable actions on the path from the
 root to the leaf.
 
-%%%A set of runs can be represented symbolically by a tree of valuations to
-%%%controllable and uncontrollable label variables where valuations are allowed to
-%%%be \emph{unfixed}. An unfixed value symbolically represents all possible
-%%%valuations. Formally, we define the tree as a set of lists of label valuations
-%%%and a node in the tree may be identified by the list made by following the path
-%%%from the root.
-
-%%%The entire set of runs of a bounded game of rank $n$ is symbolically
-%%%represented by a tree of depth $2n$ (a step is two moves - environment then
-%%%controller) and width 1 populated by unfixed edges.  Fixing some moves and
-%%%thereby reducing the set of runs forms an \emph{abstract game tree} that
-%%%symbolically represents a smaller version of the game.
-
-%%%A strategy is equivalent to the set of all runs with the controller's labels
-%%%obeying the strategy mapping $\pi$. Therefore, a strategy can also be
-%%%represented by a tree. Relaxing the restriction of the strategy mapping allows
-%%%for a \emph{partial strategy} in which multiple labels are now possible for a
-%%%single state.
-
-%%%A strategy or partial strategy can also be thought of as an abstract game. A
-%%%partial strategy for the controller is a restriction only on the controllable
-%%%labels in the game. So if the environment can not win in the abstract game
-%%%equivalent to the controller's partial strategy, then all strategies allowable
-%%%by that partial strategy must be winning.
-
-%%%An abstract game tree can be checked for the existence of a winning run by a
-%%%SAT solver\cite{narodytska2014}.  The tree must be encoded into CNF by making
-%%%copies of the transition relation for each game step in tree. The formula must
-%%%also check whether the error state has been reached in no branch
-%%%(\emph{respectively}: in all branches) for the controller (environment.) The
-%%%functions that produce these formulas are shown in Algorithm
-%%%\ref{alg:treeFormula}.
-
-%%%When we produce a formula using $\textsc{treeFormula}$ the SAT solver is
-%%%playing on behalf on the controller. Any unfixed labels in the tree,
-%%%controllable or uncontrollable, will be existentially quantified.  This means
-%%%that if there exists a way for the game to be solved when both players
-%%%cooperate on unfixed labels the SAT solver will find it. If no winning run
-%%%exists in an abstract game even when the players are cooperating then there is
-%%%no winning run when the opponent is playing adversarily.
-
-%%%By checking for the existence of a winning run for the environment in an
-%%%abstract game tree constructed from a partial controller strategy we are
-%%%checking if the partial strategy is winning. If no environment-winning run
-%%%exists within the partial strategy then it is a winning partial strategy,
-%%%otherwise the spoiling run is a counterexample that proves that the partial
-%%%strategy is not winning. This forms the basis of a counterexample guided
-%%%abstraction refinement framework \cite{clarke2000} that operates on candidate strategies.
-
 \subsection{Counterexample-guided bounded synthesis}
+
+The bounded synthesis algorithm solves abstract game trees by invoking a SAT
+solver to search for candidate partial strategies. Candidate strategies are
+checked and by a call to the opponent solver, which also refines the abstract
+game tree. The refinements are then solved recursively.  The full procedure is
+illustrated in Algorithm~\ref{alg:bounded}.
 
 \begin{algorithm}
     \begin{algorithmic}[1]
@@ -453,22 +355,22 @@ root to the leaf.
     \label{alg:bounded}
 \end{algorithm}
     
-Algorithm~\ref{alg:bounded} illustrates the bounded synthesis algorithm. The
-algorithm takes a concrete game $G$ as an implicit argument. In addition, it
+The algorithm takes a concrete game $G$ as an implicit argument. In addition it
 takes a player (controller or environment), state-round pair $\langle s,
 k\rangle$ and an abstract game tree $T$ and returns a winning partial strategy
-for it, if one exists.  The initial invocation of the algorithm takes the
-initial state $\langle I, 0\rangle$ and an empty abstract game tree
-$\emptyset$. Initially the solver is playing on behalf of the environment since
-that player takes the first move in every step.  The empty game tree does not
-constrain opponent moves, hence solving such an abstraction is equivalent to
-solving the original concrete game.  The algorithm is organised as a
-counterexample-guided abstraction refinement (CEGAR) loop.  The first step of
-the algorithm uses the \textsc{findCandidate} function, described in detail
-below, to come up with a candidate partial strategy for $T$. If it fails to
-find a strategy, this means that no winning partial strategy exists for $T$.
-If, on the other hand, a candidate partial strategy is found, we need to verify
-if it is indeed winning for $T$.
+for $T$, if one exists.  The environment takes the first move in each step of
+the game so the algorithm initially plays on the environment's behalf. The
+initial invocation takes the initial state $\langle I, n\rangle$ and an empty
+abstract game tree $\emptyset$. The empty game tree does not constrain opponent
+moves, hence solving such an abstraction is equivalent to solving the original
+concrete game.
+
+The algorithm is organised as a counterexample-guided abstraction refinement
+(CEGAR) loop.  The first step of the algorithm uses the \textsc{findCandidate}
+function, described in detail below, to come up with a candidate partial
+strategy for $T$. If it fails to find a strategy, this means that no winning
+partial strategy exists for $T$.  If, on the other hand, a candidate partial
+strategy is found, we need to verify if it is indeed winning for $T$.
 
 The \textsc{verify} procedure searches for a \emph{spoiling} counterexample
 strategy in each leaf of the candidate partial strategy by calling
@@ -493,25 +395,27 @@ the loop terminates after all actions in the game are refined into the abstract
 game.
 
 The way game trees are refined is determined by the formula passed to the SAT
-solver in $\textsc{findCandidate}$. This formula encodes an abstract game tree
-into CNF by making copies of the transition relation for each game step in the
-tree.  The formula must also check whether the error state has been reached in
-no branch (\emph{respectively}: in all branches) for the controller
-(environment.) This procedure is defined in Algorithm \ref{alg:treeFormula} for
-both the controller in $\textsc{treeFormula}$ and the environment in
-$\textsc{\textoverline{treeFormula}}$.
+solver in $\textsc{findCandidate}$. This formula contains CNF encodings of all
+of the unrolled runs represented by an abstract game tree and the winning
+condition of the current player. Runs are encoded by copying the transition
+relation for every step in the abstract game. When playing for the controller,
+the SAT solver searches for a satisfying assignment to the unfixed label
+variables in tree so that none of the runs reaches the error state. The
+environment formulation is satisfiable if any run does reach the error state.
+The formula is constructed recursively from the root of a tree by
+$\textsc{treeFormula}$.
 
-Since the game tree formulation is passed to a SAT solver, any unfixed labels
-in the tree - both controllable and uncontrollable - will be existentially
-quantified. This means that the SAT solver will find any way to win the game
-while both players are cooperating. If no winning run exists in an abstract
-game even when the players are cooperating then there is no winning run when
-the opponent is playing adversarily. When a winning run is found, the actions
-chosen by the SAT solver are used to refine the game tree. This is advantageous
-for many synthesis problems where the game must be formalised as adversarial
-for correctness but the final implementation will be cooperating with its
-environment in the real world. An example of such a system is a device driver
-that cooperates with the device and OS to interface between the two.
+Since the game tree formulation is passed to a SAT solver, both controllable
+and uncontrollable unfixed labels will be existentially quantified. This means
+that the SAT solver will find any way to win the game while both players are
+cooperating. If no winning run exists in an abstract game even when the players
+are cooperating then there is no winning run when the opponent is playing
+adversarily. When a winning run is found, the actions chosen by the SAT solver
+are used to refine the game tree. This is advantageous for many synthesis
+problems where the game must be formalised as adversarial for correctness but
+the final implementation will be cooperating with its environment in the real
+world. An example of such a system is a device driver that cooperates with the
+device and OS to interface between the two.
 
 \begin{algorithm}
     \caption{Tree formulas for Controller and Environment respectively}
