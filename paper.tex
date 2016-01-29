@@ -211,7 +211,11 @@ action $a$, the controller is required to play action $b$ in the next round.
 It then reaches a leaf of the tree and continues playing unrestricted.  The
 root of the tree is annotated by the initial state $s$ of the abstract game and
 the bound $k$ on the number of rounds.  We denote $\textsc{nodes}(T)$ the set
-of all nodes of a tree $T$ and $\textsc{leaves}(T)$ the subset of leaf nodes.  
+of all nodes of a tree $T$, $\textsc{leaves}(T)$ the subset of leaf nodes, for
+edge $e$ $\textsc{action}(e)$ is the action that labels the edge, and for node
+$n$ $\textsc{height}(n)$ as the maximal distance from n to a leaf. For a node
+$n$ of the tree, $\textsc{succ}(n)$ is the set of pairs $\langle e, n' \rangle$
+where $n'$ is a child node of $n$ and $e$ is the edge connecting $n$ and $n'$.
 
 \tikzset{every node/.style={solid}}
 \tikzstyle{fixed}=[solid]
@@ -434,11 +438,10 @@ Algorithm~\ref{alg:treeFormula}.
 The tree is first extended to the maximum bound with edges that are labeled
 with arbitrary opponent actions (Algorithm~\ref{alg:bounded}, line 14) as shown
 in Figure~\ref{fig:extended}. Then copies of state and action variables are
-introduced for each node in tree and opponent action variables for each edge.
-Opponent actions are set to $\textsc{action}(e)$, the action that labels the
-edge of the tree $e$. The state and action variables of node $n$ are connected
-to successor nodes $\textsc{succ}(n)$ by an encoding of the transition relation
-and constrained to the winning condition of the player.
+introduced for each node in tree and opponent action variables for each edge
+$e$ set to $\textsc{action}(e)$. The state and action variables of node $n$ are
+connected to successor nodes $\textsc{succ}(n)$ by an encoding of the
+transition relation and constrained to the winning condition of the player.
 
 %%%Candidates are discovered by passing a formulation of the abstract game tree to
 %%%a SAT solver in $\textsc{findCandidate}$. This formula contains CNF encodings
@@ -468,7 +471,7 @@ and constrained to the winning condition of the player.
     \label{alg:treeFormula}
     \begin{algorithmic}[1]
         \Function{treeFormula}{$T$}
-        \If{$\Call{bound}{T} = 0$}
+        \If{$\Call{height}{T} = 0$}
         \State \Return{ $\lnot \Call{E}{X_{T}}$ }
         \Else
         \State \Return{$\lnot \Call{E}{X_{T}} \land$ \\
@@ -482,7 +485,7 @@ and constrained to the winning condition of the player.
     \begin{algorithmic}[1]
         \algrestore{tf1}
         \Function{\textoverline{treeFormula}}{$T$}
-        \If{$\Call{bound}{T} = 0$}
+        \If{$\Call{height}{T} = 0$}
         \State \Return{\Call{E}{$X_{T}$}}
         \Else
         \State \Return{ $\Call{E}{X_{T}} \lor$ \\
@@ -632,7 +635,7 @@ enabled in the unbounded version of the algorithm, which invoke \textsc{learn} o
             \IIf{$T = \emptyset$}
                 \Return
             \EndIIf
-            \State $n \gets $ non-leaf node with min bound
+            \State $n \gets $ non-leaf node with min height 
             \State $\langle T_1, T_2 \rangle \gets $ \Call{gtSplit}{$T, n$}
             \State $\mathcal{I} \gets $ \Call{interpolate}{$s(X_T) \land $ \Call{treeFormula}{$T_1$}, \Call{treeFormula}{$T_2$}}
             \State $B^M \gets B^M \lor \mathcal{I}$
@@ -646,15 +649,15 @@ enabled in the unbounded version of the algorithm, which invoke \textsc{learn} o
         \Require $s(X_T) \land $ \Call{\textoverline{treeFormula}}{$T$} $\equiv \bot$
         \Require \emph{May-invariant} holds
         \Ensure \emph{May-invariant} holds
-        \Ensure $s(X_T) \land B^m[$\Call{bound}{$T$}$] \equiv \bot$
+        \Ensure $s(X_T) \land B^m[$\Call{height}{$T$}$] \equiv \bot$
         \Function{\textoverline{learn}}{$s, T$}
             \IIf{$T = \emptyset$}
                 \Return
             \EndIIf
-            \State $n \gets $ non-leaf node with min bound
+            \State $n \gets $ non-leaf node with min height 
             \State $\langle T_1, T_2 \rangle \gets $ \Call{gtSplit}{$T, n$}
             \State $\mathcal{I} \gets $ \Call{interpolate}{$s(X_T) \land $ \Call{\textoverline{treeFormula}}{$T_1$}, \Call{\textoverline{treeFormula}}{$T_2$}}
-            \For{$i = 1$ to \Call{bound}{$n$}}
+            \For{$i = 1$ to \Call{height}{$n$}}
                 \State $B^m[i] \gets B^m[i] \setminus \mathcal{I}$
             \EndFor
             \State \Call{\textoverline{learn}}{$s, T_1$}
@@ -711,7 +714,7 @@ blocked by $B^M$.
     \label{alg:unboundedTreeFormula}
     \begin{algorithmic}[1]
         \Function{treeFormula}{$T$}
-        \If{$\Call{bound}{T} = 0$}
+        \If{$\Call{height}{T} = 0$}
         \State \Return{ $\lnot \Call{$B^M$}{X_{T}}$ }
         \Else
         \State \Return{$\lnot \Call{$B^M$}{X_{T}} \land$ \\
@@ -725,10 +728,10 @@ blocked by $B^M$.
     \begin{algorithmic}[1]
         \algrestore{tf1}
         \Function{\textoverline{treeFormula}}{$T$}
-        \If{$\Call{bound}{T} = 0$}
+        \If{$\Call{height}{T} = 0$}
         \State \Return{\Call{E}{$X_T$}}
         \Else
-        \State \Return{ \Call{$B^m[\Call{bound}{T}]$}{$X_{T}$} $\land$ \\
+        \State \Return{ \Call{$B^m[\Call{height}{T}]$}{$X_{T}$} $\land$ \\
             $$\Call{E}{X_T} \lor \bigvee_{\langle e, n \rangle \in \Call{succ}{T}}(\Call{$\delta$}{X_T, U_n, C_e, X_n} \land C_e = \Call{action}{e} \land \Call{\textoverline{treeFormula}}{n})$$ }
         \EndIf
         \EndFunction
@@ -743,7 +746,7 @@ environment-winning strategy.  We therefore record learned environment-losing st
 along with associated bounds.  To this end, we maintain a conceptually infinite array of
 sets $B^m[k]$ that are may-losing for the controller, indexed by bound $k$.  $B^m[k]$ 
 are initialized to $\top$ for all $k$.  Whenever an environment-losing set $\mathcal{I}$
-is discovered for a node $n$ with bound $\textsc{bound}(n)$ in line~13 of Algorithm~\ref{alg:learn}, this set is subtracted from 
+is discovered for a node $n$ with bound $\textsc{height}(n)$ in line~13 of Algorithm~\ref{alg:learn}, this set is subtracted from 
 $B^m[i]$, for all $i$ less than or equal to the bound (lines~14--16).
 
 %It is more complicated to learn states from environment-losing abstract game
@@ -853,26 +856,26 @@ against tree $T_2$.
 
 Formally, $\II$ has the property $\II \land F_2 \equiv \bot$.  Since $T_2$ is
 of depth 1, this means that the environment cannot force the game into
-$B^m[\textsc{bound}(n)]$ playing against the counterexample moves in $T_2$.
-Hence, $\II \cap Upre(B^m[\textsc{bound}(n)]) = \emptyset$.  Furthermore, since
+$B^m[\textsc{height}(n)]$ playing against the counterexample moves in $T_2$.
+Hence, $\II \cap Upre(B^m[\textsc{height}(n)]) = \emptyset$.  Furthermore, since
 the may-invariant holds, $\II \cap Upre(i) = \emptyset$, for all $i <
-\textsc{bound}(n)$.  Hence, removing $\II$ from all $B^m[i], i\leq
-\textsc{bound}(n)$ in line~(15) preserves the may-invariant, thus satisfying the
+\textsc{height}(n)$.  Hence, removing $\II$ from all $B^m[i], i\leq
+\textsc{height}(n)$ in line~(15) preserves the may-invariant, thus satisfying the
 first post-condition.
 
 Furthermore, the interpolant satisfies $F_1 \rightarrow \II$, i.e., any
 assignment to $X_n$ that satisfies $s(X_T) \land
 \textsc{\textoverline{treeFormula}}(T_1)$ also satisfies $\II$.  Hence,
-removing $\II$ from $B^m[\textsc{bound}(n)]$ makes $s(X_T) \land
+removing $\II$ from $B^m[\textsc{height}(n)]$ makes $s(X_T) \land
 \textsc{\textoverline{treeFormula}}(T_1)$ unsatisfiable, and hence all
 preconditions of the recursive invocation of \textsc{\textoverline{learn}} in
 line~(17) are satisfied.  
 
 At the second last recursive call to \textsc{\textoverline{learn}}, tree $T_1$
 is empty, $n$ is the root node, $\textsc{\textoverline{treeFormula}}(T_1)
-\equiv B^m[\textsc{bound}(T)](X^T)$; hence $s(X_T) \land
+\equiv B^m[\textsc{height}(T)](X^T)$; hence $s(X_T) \land
 \textsc{\textoverline{treeFormula}}(T_1) \equiv s(X_T) \land
-B^m[\textsc{bound}(T)](X^T) \equiv \bot$.  Thus the second postcondition of
+B^m[\textsc{height}(T)](X^T) \equiv \bot$.  Thus the second postcondition of
 \textsc{\textoverline{learn}} holds.
 
 The proof of \textsc{learn} is similar to the above proof of \textsc{learn}. An
