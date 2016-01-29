@@ -140,40 +140,42 @@ synthesis techniques.
 
 \section{Background}
 
-A \emph{safety game}, $G = \langle X, L_u, L_c, \delta, I, E \rangle$,
-is defined over boolean state variables $X$, uncontrollable label variables $L_u$, and
-controllable label variables $L_c$.  $I$ is the initial state of the game given as a 
-valuation of state variables.  $E(X)$ is the set of error states represented by its 
-characteristic formula.  The transition relation $\delta(X, L_u, L_c, X')$ of the game 
-is a boolean formula that relates current state and label to the set of possible next 
-states of the game.  We assume deterministic games, where 
-$\delta(x,u,c,x'_1) \land \delta(x,u,c,x'_2) \implies (x'_1=x'_2)$.
+A \emph{safety game}, $G = \langle X, U, C, \delta, I, E \rangle$, is defined
+over boolean state variables $X$, uncontrollable action variables $U$, and
+controllable action variables $C$.  $I$ is the initial state of the game given
+as a valuation of state variables.  $E(X)$ is the set of error states
+represented by its characteristic formula.  The transition relation $\delta(X,
+U, C, X')$ of the game is a boolean formula that relates current state and
+action to the set of possible next states of the game.  We assume deterministic
+games, where $\delta(x,u,c,x'_1) \land \delta(x,u,c,x'_2) \implies
+(x'_1=x'_2)$.
 
 
-At every round of the game, the \emph{environment} picks an
-uncontrollable label, the \emph{controller} responds by choosing a controllable 
-label and the game transitions into a new state according to $\delta$. 
-A \emph{run} of a game $(x_0, u_0, c_0), (x_1, u_1, c_1) \dots (x_n, u_n,
-c_n)$ is a chain of state and label pairs s.t.\,$\delta(x_k, u_k, c_k, x_{k+1})$. 
-A run is winning for the controller if $x_0 = I \land \forall i \in \{1..n\} (\lnot E(x_i))$. 
-In a \emph{bounded game} with bound $n$ all runs are restricted to length $n$, whereas unbounded 
-games consider runs of infinite length. Since we consider only deterministic games, a run 
-is uniquely described by a list of assignments to $L_u$ and $L_c$.
+At every round of the game, the \emph{environment} picks an uncontrollable
+action, the \emph{controller} responds by choosing a controllable action and
+the game transitions into a new state according to $\delta$.  A \emph{run} of a
+game $(x_0, u_0, c_0), (x_1, u_1, c_1) \dots (x_n, u_n, c_n)$ is a chain of
+state and action pairs s.t.\,$\delta(x_k, u_k, c_k, x_{k+1})$.  A run is
+winning for the controller if $x_0 = I \land \forall i \in \{1..n\} (\lnot
+E(x_i))$.  In a \emph{bounded game} with bound $\kappa$ all runs are restricted
+to length $\kappa$, whereas unbounded games consider runs of infinite length.
+Since we consider only deterministic games, a run is uniquely described by a
+list of assignments to $U$ and $C$.
 
-A \emph{controller strategy} $\pi^c : (X, L_u) \to L_c$ is a mapping of states
-and uncontrollable inputs to controllable labels. A controller strategy is
-winning in a bounded game of rank $n$ if all runs $(x_0, u_0, \pi^c(x_0, u_0)),
-(x_1, u_1, \pi^c(x_1, u_1)) \dots$ $(x_n, u_n, \pi^c(x_n, u_n))$ are winning.
+A \emph{controller strategy} $\pi^c : (X, U) \to C$ is a mapping of states and
+uncontrollable inputs to controllable actions. A controller strategy is winning
+in a bounded game of rank $n$ if all runs $(x_0, u_0, \pi^c(x_0, u_0)), (x_1,
+u_1, \pi^c(x_1, u_1)) \dots$ $(x_n, u_n, \pi^c(x_n, u_n))$ are winning.
 Bounded \emph{realizability} is the problem of determining the existence of
 such a strategy for a bounded game.
 
-An \emph{environment strategy} $\pi^e : X \to L_u$ is a mapping of states to
-uncontrollable labels. A bounded run is winning for the environment if $x_0
-= I \land \exists i \in \{1..n\} (E(x_i))$ and an environment strategy is
-winning for a bounded game if all runs $(x_0, \pi^e(x_1), c_1), (x_1,
-\pi^e(x_1), c_1) \dots (x_n, \pi^e(x_n), c_n)$ are winning for the environment.
-Safety games are zero sum, therefore the existence of a winning controller strategy
-implies the nonexistence of a winning environment strategy and vice versa.
+An \emph{environment strategy} $\pi^e : X \to U$ is a mapping of states to
+uncontrollable actions. A bounded run is winning for the environment if $x_0 =
+I \land \exists i \in \{1..n\} (E(x_i))$ and an environment strategy is winning
+for a bounded game if all runs $(x_0, \pi^e(x_1), c_1), (x_1, \pi^e(x_1), c_1)
+\dots (x_n, \pi^e(x_n), c_n)$ are winning for the environment.  Safety games
+are zero sum, therefore the existence of a winning controller strategy implies
+the nonexistence of a winning environment strategy and vice versa.
 
 \subsection{Counterexample-guided bounded synthesis}
 
@@ -186,7 +188,7 @@ formula consisting of the game's transition relation \emph{unrolled} to the
 length of the bounded game. The quantifiers represent the two players of the
 game: universal for the controller and existential for the environment.  Just
 as the players alternate in choosing actions every step of the game, the
-formula is prefixed by a quantifier alternation over $L_u$ and $L_c$ for each
+formula is prefixed by a quantifier alternation over $U$ and $C$ for each
 step.
 
 Instead of solving both quantifiers at once, two competing solvers are used to
@@ -202,7 +204,7 @@ strategy for the game.
 \tikzstyle{unfixed}=[dash pattern = on 2pt off 2pt]
 \begin{figure}
     \centering
-    \begin{subfigure}[t]{.32\textwidth}
+    \begin{subfigure}[t]{.25\textwidth}
         \centering
         \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
             \node [circle,draw] (root){}
@@ -221,7 +223,7 @@ strategy for the game.
         \caption{AGT}
         \label{fig:agt}
     \end{subfigure}%
-    \begin{subfigure}[t]{.32\textwidth}
+    \begin{subfigure}[t]{.25\textwidth}
         \centering
         \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
             \node [circle,draw] (root){}
@@ -244,7 +246,7 @@ strategy for the game.
         \caption{AGT with partial strategy}
         \label{fig:strategy}
     \end{subfigure}%
-    \begin{subfigure}[t]{.32\textwidth}
+    \begin{subfigure}[t]{.25\textwidth}
         \centering
         \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
             \node [circle,draw] (root){}
@@ -265,6 +267,34 @@ strategy for the game.
         \captionsetup{width=.8\textwidth}
         \caption{Refined AGT}
         \label{fig:refined}
+    \end{subfigure}%
+    \begin{subfigure}[t]{.25\textwidth}
+        \centering
+        \begin{tikzpicture}[scale=0.75,dash pattern = on 2pt off 2pt, level distance = 10mm]
+            \node [circle,draw] (root){}
+                child {node [circle,draw] {}
+                    child {node [circle,draw] {}
+                        child {node [circle,draw] {}
+                            edge from parent [fixed] node [left] {$c$}
+                        }
+                        edge from parent [fixed] node [left] {$b$}
+                    }
+                    edge from parent [fixed] node [left] {$a$}
+                }
+                child {node [circle,draw] {}
+                    child {node [circle,draw] {}
+                        child {node [circle,draw] {}
+                            edge from parent [fixed] node [left] {$f$}
+                        }
+                        edge from parent [fixed] node [right] {$e$}
+                    }
+                    edge from parent [fixed] node [right] {$d$}
+                }
+                node [above=4pt] {$\langle s, 3 \rangle$};
+        \end{tikzpicture}
+        \captionsetup{width=.8\textwidth}
+        \caption{Extended AGT}
+        \label{fig:extended}
     \end{subfigure}
     \caption{Abstract game trees}
     \label{fig:alltrees}
@@ -286,8 +316,8 @@ We denote $\textsc{nodes}(T)$ the set of all nodes of a tree $T$ and
 $\textsc{leaves}(T)$ the subset of leaf nodes.  
 
 Given a controller (environment)
-abstract game tree $T$ a \emph{partial strategy} $Strat: \textsc{nodes}(T) \rightarrow L_u$ 
-($Strat: \textsc{nodes}(T) \rightarrow L_c$) labels each node of the tree with
+abstract game tree $T$ a \emph{partial strategy} $Strat: \textsc{nodes}(T) \rightarrow U$ 
+($Strat: \textsc{nodes}(T) \rightarrow C$) labels each node of the tree with
 the opponent's action to be played in that node.   Figure~\ref{fig:strategy}
 shows an example partial strategy.  The environment starts by choosing action
 $\alpha$.  If the controller plays $a$, the environment responds with $\beta$
@@ -355,12 +385,12 @@ illustrated in Algorithm~\ref{alg:bounded}.
     \label{alg:bounded}
 \end{algorithm}
 
-The algorithm takes a concrete game $G$ with maximum bound $n$ as an implicit
+The algorithm takes a concrete game $G$ with maximum bound $\kappa$ as an implicit
 argument.  In addition, it takes a player $p$ (controller or environment),
 state $s$, bound $k$ and an abstract game tree $T$ and returns a winning
 partial strategy for $\textsc{opponent}(p)$, if one exists.  The initial
-invocation of the algorithm takes the initial state $\langle I, n\rangle$ and
-an empty abstract game tree $\emptyset$.  Initially the solver is playing on
+invocation of the algorithm takes the initial state $I$, bound $\kappa$ and an
+empty abstract game tree $\emptyset$.  Initially the solver is playing on
 behalf of the environment since that player takes the first move in every step.
 The empty game tree does not constrain opponent moves, hence solving such an
 abstraction is equivalent to solving the original concrete game.
@@ -395,19 +425,22 @@ game.
 
 The CEGAR loop depends on the ability to guess candidate partial strategies in
 \textsc{findCandidate}. For this purpose we use the heuristic that a partial
-strategy may be winning if for each \textsc{outcome} in the tree there exists a
-play of controller and environment actions that is winning for the current
-player. We can formulate this heuristic as a SAT query, which is constructed
-recursively by $\textsc{treeFormula}$ ($\textsc{\textoverline{treeFormula}}$)
-in Algorithm~\ref{alg:treeFormula}. The tree is first extended to the maximum
-bound with \emph{unfixed} actions that allow existential choice by the SAT
-solver. Then each game round in the tree is encoded in CNF by making copies of
-the transition relation along with the winning condition of the current player.
+strategy may be winning if each \textsc{outcome} of the strategy can be
+extended to a run of the game that is winning for the current player.  Clearly,
+if such a partial strategy does not exist then no winning partial strategy can
+exist for the abstract game tree. We can formulate this heuristic as a SAT
+query, which is constructed recursively by $\textsc{treeFormula}$ (for the
+controller) or $\textsc{\textoverline{treeFormula}}$ (for the environment) in
+Algorithm~\ref{alg:treeFormula}.
 
-The heuristic is based on the observation that for many synthesis problems in
-the real world the final implementation will cooperate with its environment.
-The existential search of the SAT solver simulates cooperation between the two
-players.
+The tree is first extended to the maximum bound with edges that are labeled
+with arbitrary opponent actions (Algorithm~\ref{alg:bounded}, line 14) as shown
+in Figure~\ref{}. Then copies of state and action variables are introduced for
+each node in tree and opponent action variables for each edge.  Opponent
+actions are set to $\textsc{action}(e)$, the action that labels the edge of the
+tree $e$. The new state and action variables are connected to the successor
+nodes (\textsc{succ}) by an encoding transition relation and constrained to the
+winning condition of the player.
 
 %%%Candidates are discovered by passing a formulation of the abstract game tree to
 %%%a SAT solver in $\textsc{findCandidate}$. This formula contains CNF encodings
@@ -437,11 +470,11 @@ players.
     \label{alg:treeFormula}
     \begin{algorithmic}[1]
         \Function{treeFormula}{$T$}
-        \If{$\Call{rank}{T} = 0$}
+        \If{$\Call{bound}{T} = 0$}
         \State \Return{ $\lnot \Call{E}{X_{T}}$ }
         \Else
         \State \Return{$\lnot \Call{E}{X_{T}} \land$ \\
-            $$\bigwedge_{n \in \Call{succ}{T}}(\Call{$\delta$}{X_n, U_n, C_n, X'_n} \land \Call{label}{n} \land \Call{treeFormula}{n})$$
+            $$\bigwedge_{\langle e, n \rangle \in \Call{succ}{T}}(\Call{$\delta$}{X_T, U_e, C_n, X_n} \land U_e = \Call{action}{e} \land \Call{treeFormula}{n})$$
         }
         \EndIf
         \EndFunction
@@ -451,11 +484,11 @@ players.
     \begin{algorithmic}[1]
         \algrestore{tf1}
         \Function{\textoverline{treeFormula}}{$T$}
-        \If{$\Call{rank}{T} = 0$}
+        \If{$\Call{bound}{T} = 0$}
         \State \Return{\Call{E}{$X_{T}$}}
         \Else
         \State \Return{ $\Call{E}{X_{T}} \lor$ \\
-        $$\bigvee_{n \in \Call{succ}{T}}(\Call{$\delta$}{X_n, U_n, C_n, X'_n} \land \Call{label}{n} \land \Call{\textoverline{treeFormula}}{n})$$ }
+        $$\bigvee_{\langle e, n \rangle \in \Call{succ}{T}}(\Call{$\delta$}{X_T, U_n, C_e, X_n} \land C_e = \Call{action}{e} \land \Call{\textoverline{treeFormula}}{n})$$ }
         \EndIf
         \EndFunction
     \end{algorithmic}
@@ -468,30 +501,21 @@ players.
 Bounded synthesis can be used to prove the existence of a winning strategy for
 the environment on the unbounded game by providing a witness. For the
 controller, the strongest claim that can be made is that the strategy is
-winning as long as the game does not extend beyond the bound.
+winning as long as the game does not extend beyond the maximum bound.
 
-It is possible to set a bound such that all runs in the unbounded game will be
+It is possible to set a maximum bound such that all runs in the unbounded game will be
 considered. The na\"ive approach is to use size of the state space as the bound
 ($2^{|X|}$) so that all states may be explored by the algorithm. A more nuanced
 approach is to use the diameter of the game \cite{biere1999}, which is the
 smallest number $d$ such that for any state $x$ there is a path of length $\leq
-d$ to all other reachable states. This approach is common in bounded model
-checking but for synthesis it quickly becomes intractable to consider such long
-runs.
+d$ to all other reachable states. However, the diameter is difficult to
+estimate and can still lead to infeasibly long games.
 
-When performing model checking or synthesis with BDDs \cite{burch1990} the set
-of states that are winning for the environment is iteratively constructed by
-computing the states from which the environment can force the game into the
-previous winning set. Eventually this process reaches a fixed point and the
-total set of environment winning states is known.
+We instead present an approach that iteratively solves games of increasing
+bound while learning states. We show that reaching a fixed point in learned
+states is sufficient for completeness.
 
-We apply a similar fixed point computation on game states to the bounded
-synthesis algorithm in order to promote it to unbounded games. Our unbounded
-procedure iteratively executes the bounded algorithm while recording states
-from abstract game trees. By carefully managing the way states are recorded we
-guarantee that a fixed point proves the controller's strategy correct.
-
-\subsection{Extending Bounded Synthesis to Unbounded Games}
+%%%\subsection{Extending Bounded Synthesis to Unbounded Games}
 
 \begin{algorithm}[h]
     \begin{algorithmic}[1]
@@ -528,55 +552,46 @@ guarantee that a fixed point proves the controller's strategy correct.
     \label{alg:unbounded}
 \end{algorithm}
 
-The unbounded synthesis algorithm enhances the bounded method with
-computational learning. States are carefully recorded from unsatisfiable
-abstract games while maintaining an invariant ensuring the monotonicity of
-learning.
+%%%The unbounded synthesis algorithm enhances the bounded method with
+%%%computational learning. States are carefully recorded from unsatisfiable
+%%%abstract games while maintaining an invariant ensuring the monotonicity of
+%%%learning.
 
-During the CEGAR loop of the bounded algorithm, each of the competing solvers
-searches for satisfying assignments of labels to abstract game trees. When the
-abstract game is unsatisfiable this indicates that the states represented by
-nodes in the abstract game tree are losing for the current player. We extract
-these states from the game tree using interpolation.
+%%%During the CEGAR loop of the bounded algorithm, each of the competing solvers
+%%%searches for satisfying assignments of labels to abstract game trees. When the
+%%%abstract game is unsatisfiable this indicates that the states represented by
+%%%nodes in the abstract game tree are losing for the current player. We extract
+%%%these states from the game tree using interpolation.
 
-When executing the unbounded solver, lines 19 and 20 become active in the
-bounded solver. These lines call the learning procedures when the solver fails
-to find a candidate for an abstract game tree. The states symbolically
-represented by nodes in the tree are losing for whichever player could not find
-a winning candidate and can be extracted from the tree using interpolation.
+%%%When executing the unbounded solver, lines 19 and 20 become active in the
+%%%bounded solver. These lines call the learning procedures when the solver fails
+%%%to find a candidate for an abstract game tree. The states symbolically
+%%%represented by nodes in the tree are losing for whichever player could not find
+%%%a winning candidate and can be extracted from the tree using interpolation.
 
-The states in an abstract game with no controller candidate are
-\emph{must-losing}. The environment can always force the game into the error
-states from these states.
+%%%The states in an abstract game with no controller candidate are
+%%%\emph{must-losing}. The environment can always force the game into the error
+%%%states from these states.
 
-From abstractions with no environment candidate we record the complement of
-states in the tree as \emph{may-losing}. The environment cannot reach the error
-state in a number of steps equal to the distance to the bottom of the tree.
+%%%From abstractions with no environment candidate we record the complement of
+%%%states in the tree as \emph{may-losing}. The environment cannot reach the error
+%%%state in a number of steps equal to the distance to the bottom of the tree.
 
-We maintain a set of states for each rank up to the current bound. We maintain
-an invariant over these sets via careful construction so that they are
-monotonically increasing by rank. We also ensure that the environment is unable
-to force play from one set to the next. Due to these invariants, when two
-adjacent sets become equivalent we know that the algorithm has reached a fixed
-point and the controller is winning in the unbounded game (line 6).
-
-%%%\begin{figure}
-%%%    \centering
-%%%    \begin{tikzpicture}
-%%%        \node [minimum size=2cm,circle,draw] (a){$B^m[n]$};
-%%%        \node [minimum size=1.5cm,circle,draw,right=1.8cm of a] (b){$B^m[n-1]$};
-%%%        \node [minimum size=1cm,right=1.5cm of b] (dots){$\dots$};
-%%%        \node [minimum size=0.5cm,circle,draw,right=1.5cm of dots] (c){$B^m[0]$};
-%%%        \draw[-latex] (a.east) -- node [above] {$\supset$} (b.west);
-%%%        \draw[-latex] (b.east) -- node [above] {$\supset$} (dots);
-%%%        \draw[-latex] (dots.east) -- node [above] {$\supset$} (c.west);
-%%%    \end{tikzpicture}
-%%%    \caption{May-losing states}
-%%%    \label{fig:maylosing}
-%%%\end{figure}
-
+%%%We maintain a set of states for each rank up to the current bound. We maintain
+%%%an invariant over these sets via careful construction so that they are
+%%%monotonically increasing by rank. We also ensure that the environment is unable
+%%%to force play from one set to the next. Due to these invariants, when two
+%%%adjacent sets become equivalent we know that the algorithm has reached a fixed
+%%%point and the controller is winning in the unbounded game (line 6).
 
 \subsection{Learning States with Interpolants}
+
+We modify the bounded synthesis algorithm to learn a subset of states from
+failed attempts to find candidate strategies.
+
+When the abstract game is unsatisfiable this indicates that the states
+represented by nodes in the abstract game tree are losing for the current
+player. We extract these states from the game tree using interpolation.
 
 Given two formulas $F_1$ and $F_2$ such that $F_1 \land F_2$ is unsatisfiable,
 it is possible to construct a Craig interpolant\cite{craig1957} $\mathcal{I}$
@@ -587,38 +602,27 @@ unsatisfiability of $F_1 \land F_2$ \cite{pudlak1997}.
 
 \begin{figure}
     \centering
-%%%    \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
-%%%        \node [circle,draw] (root){}
-%%%            child {node [circle,draw] {}
-%%%                child {node [circle,draw] {}
-%%%                    edge from parent [fixed] node [left] {$b$}
-%%%                }
-%%%                edge from parent [fixed] node [left] {$a$}
-%%%            }
-%%%            child {node [circle,draw] {}
-%%%                edge from parent [fixed] node [right] {$d$}
-%%%            }
-%%%            node [above=4pt] {$\langle s, k \rangle$};
-%%%    \end{tikzpicture}
     \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
-        \node [] (root){}
-        child {node [circle,draw] {}
+        \node [circle,draw] (root){}
+            child {node [circle,draw] {}
                 child {node [circle,draw] {}
-                    edge from parent [fixed] node [left] {$a$}
+                    edge from parent [fixed] node [left] {$b$}
                 }
-                child {node [circle,draw] {} edge from parent[unfixed]
-                    edge from parent [fixed] node [right] {$b$}
+                edge from parent [fixed] node [left] {$a$}
+            }
+            child {node [circle,draw] {}
+                child {node [circle,draw] {}
+                    edge from parent [fixed] node [right] {$e$}
                 }
-            };
+                edge from parent [fixed] node [right] {$d$}
+            }
+            node [above=4pt] {$\langle s, 2 \rangle$};
     \end{tikzpicture}
-%%%    \begin{tikzpicture}[overlay]
-%%%        \draw [rotate = -20] (-1.9,0.35) ellipse (0.7 and 1.3);
-%%%    \end{tikzpicture}
     \caption{A controller-losing game tree}
     \label{fig:interpolatetree}
 \end{figure}
 
-Consider the snippet of a game tree in Figure \ref{fig:interpolatetree}. The
+Consider the game tree in Figure \ref{fig:interpolatetree}. The
 tree is losing for the controller, the topmost node is at rank 1, and the $a$ and
 $b$ nodes are at rank 0. Since the tree is controller-losing we know that at
 least one state in the tree will uncontrollably lead to the error state.  As a
