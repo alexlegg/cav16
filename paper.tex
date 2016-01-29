@@ -549,7 +549,7 @@ that reaching a fixed point in learned states is sufficient for completeness.
 We extend the bounded synthesis algorithm to learn states losing for one of the players from
 failed attempts to find candidate strategies.  The learning procedure kicks in whenever
 \textsc{findCandidate} cannot find a candidate strategy for an abstract game tree with initial
-state $s$.  We know that $s$ is a losing state.  We can learn additional losing
+state $s$.  At this point we have established that $s$ is a losing state.  We can learn additional losing
 states from the tree via interpolation.  This is achieved in lines~18--20 in Algorithm~\ref{alg:bounded},
 enabled in the unbounded version of the algorithm, which invoke \textsc{learn} or
 \textsc{\textoverline{learn}} to learn controller or environment losing states respectively
@@ -670,7 +670,7 @@ contain a copy of $n$ (line~4). Figure~\ref{fig:treef1} shows $T_1$, which conta
 except $n$'s children, and $T_2$ (Figure~\ref{fig:treef2}), which contains only $n$ and its children.  
 There is no candidate strategy for $T$ so $s \land
 \textsc{treeFormula}(T)$ is unsatisfiable.  By construction, 
-$\textsc{treeFormula}(T) = \textsc{treeFormula}(T_1) \land \textsc{treeFormula}(T_2)$
+$\textsc{treeFormula}(T) \equiv \textsc{treeFormula}(T_1) \land \textsc{treeFormula}(T_2)$
 and hence $s \land
 \textsc{treeFormula}(T_1) \land \textsc{treeFormula}(T_2)$ is also 
 unsatisfiable. This enables the construction of an \emph{interpolant} that
@@ -683,9 +683,9 @@ $\mathcal{I}$ refers only to the intersection of variables in $F_1$ and $F_2$.
 An interpolant can be constructed efficiently from a resolution proof of the
 unsatisfiability of $F_1 \land F_2$~\cite{pudlak1997}.
 
-We can construct an interpolant with $F_1 = s \land \textsc{treeFormula}(T_1)$
+We construct an interpolant with $F_1 = s(X_T) \land \textsc{treeFormula}(T_1)$
 and $F_2 = \textsc{treeFormula}(T_2)$ (line~5). The only variables shared between $F_1$
-and $F_2$ are the state variable copies belonging to node $n$. By construction
+and $F_2$ are the state variable copies belonging to node $n$. By the properties of the interpolant,
 $F_2 \land \mathcal{I}$ is unsatisfiable, therefore all states in $\mathcal{I}$
 are losing against abstract game tree $T_2$ in Figure~\ref{fig:treef2}.  We also know that $F_1 \to
 \mathcal{I}$, thus $\mathcal{I}$ contains all states reachable at $n$ by
@@ -738,7 +738,7 @@ environment-winning strategy.  We therefore record learned environment-losing st
 along with associated bounds.  To this end, we maintain a conceptually infinite array of
 sets $B^m[k]$ that are may-losing for the controller, indexed by bound $k$.  $B^m[k]$ 
 are initialized to $\top$ for all $k$.  Whenever an environment-losing set $\mathcal{I}$
-is discovered for a node $n$ with bound $\textsc{bound}(n)$ in line~13, Algorithm~\ref{alg:learn}, this set is subtracted from 
+is discovered for a node $n$ with bound $\textsc{bound}(n)$ in line~13 of Algorithm~\ref{alg:learn}, this set is subtracted from 
 $B^m[i]$, for all $i$ less than or equal to the bound (lines~14--16).
 
 %It is more complicated to learn states from environment-losing abstract game
@@ -763,6 +763,8 @@ recursive learning over the entire tree.
 %Algorithm~\ref{alg:learn}. When executing \textsc{findCandidate} in the
 %unbounded solver, lines 19 and 20 become active and call into the learning
 %procedures. 
+
+\subsection{Main synthesis loop}
 
 Figure~\ref{alg:unbounded} shows the main loop of the unbounded synthesis algorithm.
 The algorithm invokes the modified bounded synthesis procedure with increasing bound $k$
@@ -819,11 +821,13 @@ $B^m[i]$. We call this operation $Upre$, the uncontrollable predecessor. So the
 The \emph{must-invariant} guarantees that the must-losing set $B^M$ is an
 underapproximation of the actual losing set $B$: $$B^M \subseteq B.$$
 
+Both invariants trivially hold after $B^m$ and $B^M$ have been initialized in the
+beginning of the algorithm.
 The sets $B^m$ and $B^M$ are only modified by the functions \textsc{learn} and
-\textoverline{\textsc{learn}}.  Below we prove that these functions indeed
-maintain the invariants.
+\textoverline{\textsc{learn}}.  Below we prove that \textoverline{\textsc{learn}} 
+maintains the invariants.  The proof of \textsc{learn} is similar.
 
-\subsection{Proof of learning functions}
+\subsection{Proof of \textoverline{\textsc{learn}}}
 
 We prove that postconditions of \textsc{\textoverline{learn}} are satisfied
 assuming that its preconditions hold.
