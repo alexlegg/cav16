@@ -323,12 +323,13 @@ illustrated in Algorithm~\ref{alg:bounded}.
     \begin{algorithmic}
         \algrestore{b1}
         \Function{findCandidate}{$p, s, k, T$}
-            \State $f \gets $ \IfElse{$p = \texttt{cont}$}{\Call{treeFormula}{$T$}}{\Call{\textoverline{treeFormula}}{$T$}} \EndIfElse
-            \State $sol \gets $ \Call{SAT}{$s(X_T) \land f$}
+        \State $\hat{T} \gets $ \Call{extend}{$T$} \Comment{Extend the tree with unfixed actions}
+            \State $f \gets $ \IfElse{$p = \texttt{cont}$}{\Call{treeFormula}{$\hat{T}$}}{\Call{\textoverline{treeFormula}}{$\hat{T}$}} \EndIfElse
+            \State $sol \gets $ \Call{SAT}{$s(X_{\hat{T}}) \land f$}
             \If{$sol = \texttt{unsat}$} 
                 \If{\texttt{unbounded}} \Comment{Active only in the unbounded solver}
                     \State $\sigma \gets $ \Call{generalise}{$s$} \Comment{Expand $s$ to a set of states}
-                    \State \IfElse{$p = \texttt{cont}$}{\Call{learn}{$\sigma, T$}}{\Call{\textoverline{learn}}{$\sigma, T$}} \EndIfElse
+                    \State \IfElse{$p = \texttt{cont}$}{\Call{learn}{$\sigma, \hat{T}$}}{\Call{\textoverline{learn}}{$\sigma, \hat{T}$}} \EndIfElse
                 \EndIf
                 \State \Return $\emptyset$ \Comment{No candidate exists}
             \Else
@@ -392,28 +393,44 @@ strategy to be verified at the next iteration of the loop. In the worst case
 the loop terminates after all actions in the game are refined into the abstract
 game.
 
-Candidates are discovered by passing a formulation of the abstract game tree to
-a SAT solver in $\textsc{findCandidate}$. This formula contains CNF encodings
-of all of the unrolled runs represented by the tree and the winning condition
-of the current player.  Runs are encoded by copying the transition relation for
-every step in the abstract game. When playing for the controller, the SAT
-solver searches for a satisfying assignment to the unfixed label variables in
-tree so that none of the runs reaches the error state. The environment
-formulation is satisfiable if any run does reach the error state.  The formula
-is constructed recursively from the root of a tree by $\textsc{treeFormula}$
-(see Algorithm~\ref{alg:treeFormula}).
+The CEGAR loop depends on the ability to guess candidate partial strategies in
+\textsc{findCandidate}. For this purpose we use the heuristic that a partial
+strategy may be winning if for each \textsc{outcome} in the tree there exists a
+play of controller and environment actions that is winning for the current
+player. We can formulate this heuristic as a SAT query, which is constructed
+recursively by $\textsc{treeFormula}$ ($\textsc{\textoverline{treeFormula}}$)
+in Algorithm~\ref{alg:treeFormula}. The tree is first extended to the maximum
+bound with \emph{unfixed} actions that allow existential choice by the SAT
+solver. Then each game round in the tree is encoded in CNF by making copies of
+the transition relation along with the winning condition of the current player.
 
-Since the game tree formulation is passed to a SAT solver, both controllable
-and uncontrollable unfixed labels will be existentially quantified. This means
-that the SAT solver will find any way to win the game while both players are
-cooperating. If no winning run exists in an abstract game even when the players
-are cooperating then there is no winning run when the opponent is playing
-adversarily. When a winning run is found, the actions chosen by the SAT solver
-are used to refine the game tree. This is advantageous for many synthesis
-problems where the game must be formalised as adversarial for correctness but
-the final implementation will cooperate with its environment in the real world.
-An example of such a system is a device driver that cooperates with the device
-and OS to provide the interface between the two.
+The heuristic is based on the observation that for many synthesis problems in
+the real world the final implementation will cooperate with its environment.
+The existential search of the SAT solver simulates cooperation between the two
+players.
+
+%%%Candidates are discovered by passing a formulation of the abstract game tree to
+%%%a SAT solver in $\textsc{findCandidate}$. This formula contains CNF encodings
+%%%of all of the unrolled runs represented by the tree and the winning condition
+%%%of the current player.  Runs are encoded by copying the transition relation for
+%%%every step in the abstract game. When playing for the controller, the SAT
+%%%solver searches for a satisfying assignment to the unfixed label variables in
+%%%tree so that none of the runs reaches the error state. The environment
+%%%formulation is satisfiable if any run does reach the error state.  The formula
+%%%is constructed recursively from the root of a tree by $\textsc{treeFormula}$
+%%%(see Algorithm~\ref{alg:treeFormula}).
+
+%%%Since the game tree formulation is passed to a SAT solver, both controllable
+%%%and uncontrollable unfixed labels will be existentially quantified. This means
+%%%that the SAT solver will find any way to win the game while both players are
+%%%cooperating. If no winning run exists in an abstract game even when the players
+%%%are cooperating then there is no winning run when the opponent is playing
+%%%adversarily. When a winning run is found, the actions chosen by the SAT solver
+%%%are used to refine the game tree. This is advantageous for many synthesis
+%%%problems where the game must be formalised as adversarial for correctness but
+%%%the final implementation will cooperate with its environment in the real world.
+%%%An example of such a system is a device driver that cooperates with the device
+%%%and OS to provide the interface between the two.
 
 \begin{algorithm}
     \caption{Tree formulas for Controller and Environment respectively}
@@ -522,7 +539,7 @@ abstract game is unsatisfiable this indicates that the states represented by
 nodes in the abstract game tree are losing for the current player. We extract
 these states from the game tree using interpolation.
 
-When executing the unbounded solver, lines 18 and 19 become active in the
+When executing the unbounded solver, lines 19 and 20 become active in the
 bounded solver. These lines call the learning procedures when the solver fails
 to find a candidate for an abstract game tree. The states symbolically
 represented by nodes in the tree are losing for whichever player could not find
@@ -835,26 +852,26 @@ learn more states by increasing the reachable set. In our benchmarks we have
 observed that this optimisation is beneficial on the first few iterations of
 \textsc{checkRank}.
 
-\subsection{Choosing opponent moves}
+%%%\subsection{Choosing opponent moves}
 
-One aspect of the algorithm proposed by Narodytska et al.~\cite{narodytska2014}
-is that it mimics real-world uses of synthesis by allowing cooperation between
-system and environment. Unfortunately, allowing the opponents to pick moves for
-one another can frequently backfire. It is common when modelling real-world
-systems to abstract over out of scope failures with transitions that
-immediately determine the outcome of the game. For example, in a network driver
-a request to send a packet may fail due to a disconnected wire, which might be
-modelled as an environment controlled transition to a system-winning state.
+%%%One aspect of the algorithm proposed by Narodytska et al.~\cite{narodytska2014}
+%%%is that it mimics real-world uses of synthesis by allowing cooperation between
+%%%system and environment. Unfortunately, allowing the opponents to pick moves for
+%%%one another can frequently backfire. It is common when modelling real-world
+%%%systems to abstract over out of scope failures with transitions that
+%%%immediately determine the outcome of the game. For example, in a network driver
+%%%a request to send a packet may fail due to a disconnected wire, which might be
+%%%modelled as an environment controlled transition to a system-winning state.
 
-This slows down the synthesis process as all erroneous transition are
-accumulated into the abstract game tree. To mitigate this effect we have a
-heuristic to guess non-erroneous labels as \emph{default moves} that are used
-instead of allowing the opponent to choose. This does not effect the
-correctness of the algorithm. If line~(28) previously returned \texttt{sat} and
-is \texttt{unsat} with default moves then those moves would eventually have
-been added to the abstraction in a refinement step. If the formula is
-\texttt{unsat} even with the opponent choosing moves then it must be
-\texttt{unsat} with default moves.
+%%%This slows down the synthesis process as all erroneous transition are
+%%%accumulated into the abstract game tree. To mitigate this effect we have a
+%%%heuristic to guess non-erroneous labels as \emph{default moves} that are used
+%%%instead of allowing the opponent to choose. This does not effect the
+%%%correctness of the algorithm. If line~(28) previously returned \texttt{sat} and
+%%%is \texttt{unsat} with default moves then those moves would eventually have
+%%%been added to the abstraction in a refinement step. If the formula is
+%%%\texttt{unsat} even with the opponent choosing moves then it must be
+%%%\texttt{unsat} with default moves.
 
 \section{Evaluation}
 
