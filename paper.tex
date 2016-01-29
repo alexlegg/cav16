@@ -395,19 +395,21 @@ game.
 
 The CEGAR loop depends on the ability to guess candidate partial strategies in
 \textsc{findCandidate}. For this purpose we use the heuristic that a partial
-strategy may be winning if for each \textsc{outcome} in the tree there exists a
-play of controller and environment actions that is winning for the current
-player. We can formulate this heuristic as a SAT query, which is constructed
-recursively by $\textsc{treeFormula}$ ($\textsc{\textoverline{treeFormula}}$)
-in Algorithm~\ref{alg:treeFormula}. The tree is first extended to the maximum
-bound with \emph{unfixed} actions that allow existential choice by the SAT
-solver. Then each game round in the tree is encoded in CNF by making copies of
-the transition relation along with the winning condition of the current player.
+strategy may be winning if each \textsc{outcome} of the strategy can be extended to a
+run of the game that is winning for the current player.  Clearly, if such a partial 
+strategy does not exist then no winning partial strategy can exist for the abstract 
+game tree.  
+We can formulate this heuristic as a SAT query, which is constructed
+recursively by $\textsc{treeFormula}$ (for the controller) or $\textsc{\textoverline{treeFormula}}$
+(for the environment) in Algorithm~\ref{alg:treeFormula}. The tree is first extended to the maximum
+bound with edges that are labeled with arbitrary opponent actions (Algorithm~\ref{alg:bounded}, line 14) as shown in Figure~\ref{}.  
+Then each edge in the tree is encoded in CNF by making copies of the transition relation along with the 
+winning condition.
 
-The heuristic is based on the observation that for many synthesis problems in
-the real world the final implementation will cooperate with its environment.
-The existential search of the SAT solver simulates cooperation between the two
-players.
+%The heuristic is based on the observation that for many synthesis problems in
+%the real world the final implementation will cooperate with its environment.
+%The existential search of the SAT solver simulates cooperation between the two
+%players.
 
 %%%Candidates are discovered by passing a formulation of the abstract game tree to
 %%%a SAT solver in $\textsc{findCandidate}$. This formula contains CNF encodings
