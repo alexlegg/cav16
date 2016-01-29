@@ -567,16 +567,17 @@ enabled in the unbounded version of the algorithm, which invoke \textsc{learn} o
                     }
                     edge from parent [fixed] node [left] {$a$}
                 }
-                child {node [circle,draw] {}
+                child {node [circle,draw] (n) {}
                     child {node [circle,draw,right=5pt] {}
                         edge from parent [fixed] node [left] {$e$}
                     }
                     child {node [circle,draw,left=5pt] {}
                         edge from parent [fixed] node [right] {$f$}
                     }
-                    edge from parent [fixed] node [right] {$d$}
+                    edge from parent [fixed] {node [right] {$d$}}
                 }
                 node [above=4pt] {$\langle s, 2 \rangle$};
+            \node [right=1pt of n] {$n$};
         \end{tikzpicture}
         \caption{A losing AGT $T$}
         \label{fig:interpolatetree}
@@ -588,7 +589,7 @@ enabled in the unbounded version of the algorithm, which invoke \textsc{learn} o
                 child {node [circle,draw] {}
                     edge from parent [fixed] node [left] {$a$}
                 }
-                child {node [circle,draw] {}
+                child {node [circle,draw] (n) {}
                     child {node [circle,draw,right=5pt] {}
                         edge from parent [fixed] node [left] {$e$}
                     }
@@ -598,6 +599,7 @@ enabled in the unbounded version of the algorithm, which invoke \textsc{learn} o
                     edge from parent [fixed] node [right] {$d$}
                 }
                 node [above=4pt] {$\langle s, 2 \rangle$};
+            \node [right=1pt of n] {$n$};
         \end{tikzpicture}
         \caption{Tree slice $T_1$}
         \label{fig:treef1}
@@ -606,10 +608,13 @@ enabled in the unbounded version of the algorithm, which invoke \textsc{learn} o
         \centering
         \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
             \node [circle,draw] {}
-                child {node [circle,draw] {}
-                    edge from parent [fixed] node [left] {$b$}
-                };
-%%%                node [above=4pt] {$\langle s', 1 \rangle$};
+                child {node [circle,draw,right=5pt] {}
+                    edge from parent [fixed] node [left] {$e$}
+                }
+                child {node [circle,draw,left=5pt] {}
+                    edge from parent [fixed] node [right] {$f$}
+                }
+                node [right=5pt] {$n$};
         \end{tikzpicture}
         \caption{Tree slice $T_2$}
         \label{fig:treef2}
@@ -972,8 +977,7 @@ instance.
         AbsSynthe (seq1) & 173 & 1 \\
         Demiurge (D1real) & 139 & 5 \\
         Aisy & 98 & \\
-        \hline
-        Unbounded Synthesis & 103 & 12 \\
+        \textit{Unbounded Synthesis} & \textit{103} & \textit{12} \\
     \end{tabular}
     \caption{Synthesis Competition 2015 Results}
     \label{tab:syntcomp}
@@ -988,12 +992,12 @@ Table~\ref{tab:unique}.
     \centering
     \setlength{\tabcolsep}{16pt}
     \begin{tabular}{l l}
-        \texttt{6s216rb0\_c0to31} & \texttt{driver\_c10n} \\
-        \texttt{cnt30y} &  \texttt{stay18y} \\
-        \texttt{driver\_a10n} & \texttt{stay20n} \\
-        \texttt{driver\_a8n} & \texttt{stay20y} \\
-        \texttt{driver\_b10y} & \texttt{stay22n} \\
-        \texttt{driver\_b8y} & \texttt{stay22y} \\
+        1. \texttt{6s216rb0\_c0to31} & 7. \texttt{driver\_c10n} \\
+        2. \texttt{cnt30y} &  8. \texttt{stay18y} \\
+        3. \texttt{driver\_a10n} & 9. \texttt{stay20n} \\
+        4. \texttt{driver\_a8n} & 10. \texttt{stay20y} \\
+        5. \texttt{driver\_b10y} & 11. \texttt{stay22n} \\
+        6. \texttt{driver\_b8y} & 12. \texttt{stay22y} \\
     \end{tabular}
     \caption{Instances uniquely solved by our approach}
     \label{tab:unique}
