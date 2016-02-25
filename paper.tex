@@ -941,8 +941,77 @@ this optimisation is beneficial on the first few iterations of
             \State \Return $\emptyset$
         \EndFunction
     \end{algorithmic}
+
     \caption{Generalise $I$ optimisation}
     \label{alg:opt1}
+\end{algorithm}
+
+\subsection{Optimisation: Encouraging loops}
+
+This optimisation is designed to encourage the system player to choose a
+candidate strategy that contains loops. If the controller's strategy forces the
+game into an error free loop, then the system wins the game. This optimisation
+does not attempt to find such a strategy but instead optimistically searches
+for candidate strategies that may loop. The modifications add formulas to the
+SAT call when the controller is playing. These formulas represent loops of a
+particular length in a branch of the tree. The SAT solver is called multiple
+times for each branch in the game tree. The search begins by looking for a loop
+in the first two game rounds of the branch and successively relaxing this
+condition to longer loop lengths. If a loop is found or we reach the end of the
+branch then the algorithm moves on to greedily find more loops in other
+branches.
+
+\begin{algorithm}
+    \begin{algorithmic}
+        \Function{loopFmls}{$T$}
+            \State $i \gets 0$
+            \For{$l \in leaves(gt)$}
+                \State $j \gets 0$
+                \For{$n \in$ \Call{parents}{$l$}}
+                    \For{$p \in$ \Call{parents}{$n$}}
+                        \State $loopFmls[i][j] \gets X_n \equiv X_p$
+                    \EndFor
+                    \State $j \gets j + 1$
+                \EndFor
+                \State $i \gets i + 1$
+            \EndFor
+            \State \Return $loopFmls$
+        \EndFunction
+    \end{algorithmic}
+
+    \begin{algorithmic}
+        \Function{findCandidate}{$p, s, k, T$}
+        \State $\hat{T} \gets $ \Call{extend}{$T$} \Comment{Extend the tree with unfixed actions}
+            \State $f \gets $ \IfElse{$p = \texttt{cont}$}{\Call{treeFormula}{$\hat{T}$}}{\Call{\textoverline{treeFormula}}{$\hat{T}$}} \EndIfElse
+            \If{$p = \texttt{cont}$}
+                \State $loopFmls \gets $ \Call{loopFmls}{$\hat{T}$}
+                \State $currentLoops \gets \top$
+                \For{$i \in loopFmls$}
+                    \For{$j \in loopFmls[i]$}
+                        \State $sol \gets $ \Call{SAT}{$loopFmls[i][j] \land currentLoops \land s(X_{\hat{T}}) \land f$}
+                        \If{$sol = \texttt{sat}$}
+                            \State $currentLoops \gets currentLoops \land loopFmls[i][j]$
+                            \State \textbf{break}
+                        \EndIf
+                    \EndFor
+                \EndFor
+            \Else
+                \State $sol \gets $ \Call{SAT}{$s(X_{\hat{T}}) \land f$}
+            \EndIf
+            \If{$sol = \texttt{unsat}$} 
+                \If{\texttt{unbounded}} \Comment{Active only in the unbounded solver}
+                    %\State $\sigma \gets $ \Call{generalise}{$s$} \Comment{Expand $s$ to a set of states}
+                    \State \IfElse{$p = \texttt{cont}$}{\Call{learn}{$s, \hat{T}$}}{\Call{\textoverline{learn}}{$s, \hat{T}$}} \EndIfElse
+                \EndIf
+                \State \Return $\emptyset$ \Comment{No candidate exists}
+            \Else
+                \State \Return $\{ \langle n, c \rangle | n \in $ \Call{nodes}{$T$} $, c = \Call{sol}{n} \}$ \Comment{Fix candidate moves in $T$}
+            \EndIf
+        \EndFunction
+    \end{algorithmic}
+
+    \caption{Loop Encouragement}
+    \label{alg:opt2}
 \end{algorithm}
 
 \section{Evaluation}
