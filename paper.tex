@@ -213,10 +213,11 @@ root of the tree is annotated by the initial state $s$ of the abstract game and
 the bound $k$ on the number of rounds.  We denote $\textsc{nodes}(T)$ the set
 of all nodes of a tree $T$, $\textsc{leaves}(T)$ the subset of leaf nodes.  For
 edge $e$, $\textsc{action}(e)$ is the action that labels the edge, and for node
-$n$, $\textsc{height}(n)$ is the maximal distance from n to a leaf. $\textsc{height}(T)$ is the height 
-of the root node of the tree.  For node
-$n$ of the tree, $\textsc{succ}(n)$ is the set of pairs $\langle e, n' \rangle$
-where $n'$ is a child node of $n$ and $e$ is the edge connecting $n$ and $n'$.
+$n$, $\textsc{height}(k, n)$ is the distance from n to the last round of a game
+bounded to $k$ rounds.  $\textsc{height}(k, T)$ is the height of the root node
+of the tree.  For node $n$ of the tree, $\textsc{succ}(n)$ is the set of pairs
+$\langle e, n' \rangle$ where $n'$ is a child node of $n$ and $e$ is the edge
+connecting $n$ and $n'$.
 
 \tikzset{every node/.style={solid}}
 \tikzstyle{fixed}=[solid]
@@ -357,7 +358,7 @@ illustrated in Algorithm~\ref{alg:bounded}.
         \algrestore{b1}
         \Function{findCandidate}{$p, s, k, T$}
         \State $\hat{T} \gets $ \Call{extend}{$T$} \Comment{Extend the tree with unfixed actions}
-            \State $f \gets $ \IfElse{$p = \texttt{cont}$}{\Call{treeFormula}{$\hat{T}$}}{\Call{\textoverline{treeFormula}}{$\hat{T}$}} \EndIfElse
+            \State $f \gets $ \IfElse{$p = \texttt{cont}$}{\Call{treeFormula}{$k, \hat{T}$}}{\Call{\textoverline{treeFormula}}{$k, \hat{T}$}} \EndIfElse
             \State $sol \gets $ \Call{SAT}{$s(X_{\hat{T}}) \land f$}
             \If{$sol = \texttt{unsat}$} 
                 \If{\texttt{unbounded}} \Comment{Active only in the unbounded solver}
@@ -477,12 +478,12 @@ the winning condition of the player.
     \caption{Tree formulas for Controller and Environment respectively}
     \label{alg:treeFormula}
     \begin{algorithmic}[1]
-        \Function{treeFormula}{$T$}
-        \If{$\Call{height}{T} = 0$}
+        \Function{treeFormula}{$k, T$}
+        \If{$\Call{height}{k, T} = 0$}
         \State \Return{ $\lnot \Call{E}{X_{T}}$ }
         \Else
         \State \Return{$\lnot \Call{E}{X_{T}} \land$ \\
-            $$\bigwedge_{\langle e, n \rangle \in \Call{succ}{T}}(\Call{$\delta$}{X_T, U_e, C_T, X_n} \land U_e = \Call{action}{e} \land \Call{treeFormula}{n})$$
+            $$\bigwedge_{\langle e, n \rangle \in \Call{succ}{T}}(\Call{$\delta$}{X_T, U_e, C_T, X_n} \land U_e = \Call{action}{e} \land \Call{treeFormula}{k, n})$$
         }
         \EndIf
         \EndFunction
@@ -491,12 +492,12 @@ the winning condition of the player.
 
     \begin{algorithmic}[1]
         \algrestore{tf1}
-        \Function{\textoverline{treeFormula}}{$T$}
-        \If{$\Call{height}{T} = 0$}
+        \Function{\textoverline{treeFormula}}{$k, T$}
+        \If{$\Call{height}{k, T} = 0$}
         \State \Return{\Call{E}{$X_{T}$}}
         \Else
         \State \Return{ $\Call{E}{X_{T}} \lor$ \\
-        $$\bigvee_{\langle e, n \rangle \in \Call{succ}{T}}(\Call{$\delta$}{X_T, U_T, C_e, X_n} \land C_e = \Call{action}{e} \land \Call{\textoverline{treeFormula}}{n})$$ }
+        $$\bigvee_{\langle e, n \rangle \in \Call{succ}{T}}(\Call{$\delta$}{X_T, U_T, C_e, X_n} \land C_e = \Call{action}{e} \land \Call{\textoverline{treeFormula}}{k, n})$$ }
         \EndIf
         \EndFunction
     \end{algorithmic}
@@ -638,7 +639,7 @@ controller or environment losing states respectively
 
 \begin{algorithm}[t]
     \begin{algorithmic}[1]
-        \Require $s(X_T) \land $ \Call{treeFormula}{$T$} $\equiv \bot$
+        \Require $s(X_T) \land $ \Call{treeFormula}{$k, T$} $\equiv \bot$
         \Require \emph{Must-invariant} holds
         \Ensure \emph{Must-invariant} holds
         \Ensure $s(X_T) \land B^M \not\equiv \bot$
@@ -649,7 +650,7 @@ controller or environment losing states respectively
             \EndIIf
             \State $n \gets $ non-leaf node with min height 
             \State $\langle T_1, T_2 \rangle \gets $ \Call{gtSplit}{$T, n$}
-            \State $\mathcal{I} \gets $ \Call{interpolate}{$s(X_T) \land $ \Call{treeFormula}{$T_1$}, \Call{treeFormula}{$T_2$}}
+            \State $\mathcal{I} \gets $ \Call{interpolate}{$s(X_T) \land $ \Call{treeFormula}{$k, T_1$}, \Call{treeFormula}{$k, T_2$}}
             \State $B^M \gets B^M \lor \mathcal{I}$
             \State \Call{learn}{$s, T_1$}
         \EndFunction
@@ -658,19 +659,19 @@ controller or environment losing states respectively
     
     \begin{algorithmic}[1]
         \algrestore{learn}
-        \Require $s(X_T) \land $ \Call{\textoverline{treeFormula}}{$T$} $\equiv \bot$
+        \Require $s(X_T) \land $ \Call{\textoverline{treeFormula}}{$k, T$} $\equiv \bot$
         \Require \emph{May-invariant} holds
         \Ensure \emph{May-invariant} holds
-        \Ensure $s(X_T) \land B^m[$\Call{height}{$T$}$] \equiv \bot$
-        \Comment{$s$ will be removed from $B^m[$\Call{height}{$T$}$]$}
+        \Ensure $s(X_T) \land B^m[$\Call{height}{$k, T$}$] \equiv \bot$
+        \Comment{$s$ will be removed from $B^m[$\Call{height}{$k, T$}$]$}
         \Function{\textoverline{learn}}{$s, T$}
             \IIf{$T = \emptyset$}
                 \Return
             \EndIIf
             \State $n \gets $ non-leaf node with min height 
             \State $\langle T_1, T_2 \rangle \gets $ \Call{gtSplit}{$T, n$}
-            \State $\mathcal{I} \gets $ \Call{interpolate}{$s(X_T) \land $ \Call{\textoverline{treeFormula}}{$T_1$}, \Call{\textoverline{treeFormula}}{$T_2$}}
-            \For{$i = 1$ to \Call{height}{$n$}}
+            \State $\mathcal{I} \gets $ \Call{interpolate}{$s(X_T) \land $ \Call{\textoverline{treeFormula}}{$k, T_1$}, \Call{\textoverline{treeFormula}}{$k, T_2$}}
+            \For{$i = 1$ to \Call{height}{$k, n$}}
                 \State $B^m[i] \gets B^m[i] \setminus \mathcal{I}$
             \EndFor
             \State \Call{\textoverline{learn}}{$s, T_1$}
@@ -691,10 +692,10 @@ both slices $T_1$ and $T_2$ contain a copy of $n$ (line~4).
 Figure~\ref{fig:treef1} shows $T_1$, which contains all of $T$ except $n$'s
 children, and $T_2$ (Figure~\ref{fig:treef2}), which contains only $n$ and its
 children.  There is no candidate strategy for $T$ so $s \land
-\textsc{treeFormula}(T)$ is unsatisfiable.  By construction,
-$\textsc{treeFormula}(T) \equiv \textsc{treeFormula}(T_1) \land
-\textsc{treeFormula}(T_2)$ and hence $s \land \textsc{treeFormula}(T_1) \land
-\textsc{treeFormula}(T_2)$ is also unsatisfiable. This enables the construction
+\textsc{treeFormula}(k, T)$ is unsatisfiable.  By construction,
+$\textsc{treeFormula}(k, T) \equiv \textsc{treeFormula}(k, T_1) \land
+\textsc{treeFormula}(k, T_2)$ and hence $s \land \textsc{treeFormula}(k, T_1) \land
+\textsc{treeFormula}(k, T_2)$ is also unsatisfiable. This enables the construction
 of an \emph{interpolant} that captures losing states at node $n$.
 
 Given two formulas $F_1$ and $F_2$ such that $F_1 \land F_2$ is unsatisfiable,
@@ -704,8 +705,8 @@ $\mathcal{I}$ refers only to the intersection of variables in $F_1$ and $F_2$.
 An interpolant can be constructed efficiently from a resolution proof of the
 unsatisfiability of $F_1 \land F_2$~\cite{pudlak1997}.
 
-We construct an interpolant with $F_1 = s(X_T) \land \textsc{treeFormula}(T_1)$
-and $F_2 = \textsc{treeFormula}(T_2)$ (line~5). The only variables shared between $F_1$
+We construct an interpolant with $F_1 = s(X_T) \land \textsc{treeFormula}(k, T_1)$
+and $F_2 = \textsc{treeFormula}(k, T_2)$ (line~5). The only variables shared between $F_1$
 and $F_2$ are the state variable copies belonging to node $n$. By the properties of the interpolant,
 $F_2 \land \mathcal{I}$ is unsatisfiable, therefore all states in $\mathcal{I}$
 are losing against abstract game tree $T_2$ in Figure~\ref{fig:treef2}.  We also know that $F_1 \to
@@ -726,12 +727,12 @@ since the states that are losing to $T_2$ are now blocked by $B^M$.
     \caption{Amended tree formulas for Controller and Environment}
     \label{alg:unboundedTreeFormula}
     \begin{algorithmic}[1]
-        \Function{treeFormula}{$T$}
-        \If{$\Call{height}{T} = 0$}
+        \Function{treeFormula}{$k, T$}
+        \If{$\Call{height}{k, T} = 0$}
         \State \Return{ $\lnot \Call{$B^M$}{X_{T}}$ }
         \Else
         \State \Return{$\lnot \Call{$B^M$}{X_{T}} \land$ \\
-            $$\bigwedge_{\langle e, n \rangle \in \Call{succ}{T}}(\Call{$\delta$}{X_T, U_e, C_n, X_n} \land U_e = \Call{action}{e} \land \Call{treeFormula}{n})$$
+            $$\bigwedge_{\langle e, n \rangle \in \Call{succ}{T}}(\Call{$\delta$}{X_T, U_e, C_n, X_n} \land U_e = \Call{action}{e} \land \Call{treeFormula}{k, n})$$
         }
         \EndIf
         \EndFunction
@@ -740,12 +741,12 @@ since the states that are losing to $T_2$ are now blocked by $B^M$.
 
     \begin{algorithmic}[1]
         \algrestore{tf1}
-        \Function{\textoverline{treeFormula}}{$T$}
-        \If{$\Call{height}{T} = 0$}
+        \Function{\textoverline{treeFormula}}{$k, T$}
+        \If{$\Call{height}{k, T} = 0$}
         \State \Return{\Call{E}{$X_T$}}
         \Else
-        \State \Return{ \Call{$B^m[\Call{height}{T}]$}{$X_{T}$} $\land$ \\
-            $$\bigg( \Call{E}{X_T} \lor \bigvee_{\langle e, n \rangle \in \Call{succ}{T}}(\Call{$\delta$}{X_T, U_n, C_e, X_n} \land C_e = \Call{action}{e} \land \Call{\textoverline{treeFormula}}{n})\bigg)$$ }
+        \State \Return{ \Call{$B^m[\Call{height}{k, T}]$}{$X_{T}$} $\land$ \\
+            $$\bigg( \Call{E}{X_T} \lor \bigvee_{\langle e, n \rangle \in \Call{succ}{T}}(\Call{$\delta$}{X_T, U_n, C_e, X_n} \land C_e = \Call{action}{e} \land \Call{\textoverline{treeFormula}}{k, n})\bigg)$$ }
         \EndIf
         \EndFunction
     \end{algorithmic}
@@ -759,7 +760,7 @@ environment-winning strategy.  We therefore record learned environment-losing st
 along with associated bounds.  To this end, we maintain a conceptually infinite array of
 sets $B^m[k]$ that are may-losing for the controller, indexed by bound $k$.  $B^m[k]$ 
 are initialised to $\top$ for all $k$.  Whenever an environment-losing set $\mathcal{I}$
-is discovered for a node $n$ with bound $\textsc{height}(n)$ in line~13 of Algorithm~\ref{alg:learn}, this set is subtracted from 
+is discovered for a node $n$ with bound $\textsc{height}(k, n)$ in line~13 of Algorithm~\ref{alg:learn}, this set is subtracted from 
 $B^m[i]$, for all $i$ less than or equal to the bound (lines~14--16).
 
 %It is more complicated to learn states from environment-losing abstract game
@@ -855,11 +856,11 @@ assuming that its preconditions hold.
 
 Line~(11--12) splits the tree $T$ into $T_1$ and $T_2$, such that $T_2$ has depth
 1.  Consider formulas $F_1=s(X_T) \land
-\textsc{\textoverline{treeFormula}}(T_1)$ and $F_2 =
-\textsc{\textoverline{treeFormula}}(T_2)$.  These formulas only share variables
+\textsc{\textoverline{treeFormula}}(k, T_1)$ and $F_2 =
+\textsc{\textoverline{treeFormula}}(k, T_2)$.  These formulas only share variables
 $X_n$.  Their conjunction $F_1 \land F_2$ is unsatisfiable, as by construction
 any solution of $F_1 \land F_2$ also satisfies $s(X_T) \land
-\textsc{\textoverline{treeFormula}}(T)$, which is unsatisfiable (precondition (b)).  Hence the
+\textsc{\textoverline{treeFormula}}(k, T)$, which is unsatisfiable (precondition (b)).  Hence the
 interpolation operation is defined for $F_1$ and $F_2$.  
 
 Intuitively, the interpolant computed in line~(13) overapproximates the set of
@@ -869,38 +870,38 @@ against tree $T_2$.
 
 Formally, $\II$ has the property $\II \land F_2 \equiv \bot$.  Since $T_2$ is
 of depth 1, this means that the environment cannot force the game into
-$B^m[\textsc{height}(n)-1]$ playing against the counterexample moves in $T_2$.
-Hence, $\II \cap Upre(B^m[\textsc{height}(n)-1]) = \emptyset$.  Furthermore,
-since the may-invariant holds, $\II \cap Upre(B^m[\textsc{height}(i)]) =
-\emptyset$, for all $i < \textsc{height}(n)$.  Hence, removing $\II$ from all
-$B^m[i], i\leq \textsc{height}(n)$ in line~(15) preserves the may-invariant,
+$B^m[\textsc{height}(k, n)-1]$ playing against the counterexample moves in $T_2$.
+Hence, $\II \cap Upre(B^m[\textsc{height}(k, n)-1]) = \emptyset$.  Furthermore,
+since the may-invariant holds, $\II \cap Upre(B^m[i]) =
+\emptyset$, for all $i < \textsc{height}(k, n)$.  Hence, removing $\II$ from all
+$B^m[i], i\leq \textsc{height}(k, n)$ in line~(15) preserves the may-invariant,
 thus satisfying the first post-condition.
 
 Furthermore, the interpolant satisfies $F_1 \rightarrow \II$, i.e., any
 assignment to $X_n$ that satisfies $s(X_T) \land
-\textsc{\textoverline{treeFormula}}(T_1)$ also satisfies $\II$.  Hence,
-removing $\II$ from $B^m[\textsc{height}(n)]$ makes $s(X_T) \land
-\textsc{\textoverline{treeFormula}}(T_1)$ unsatisfiable, and hence all
+\textsc{\textoverline{treeFormula}}(k, T_1)$ also satisfies $\II$.  Hence,
+removing $\II$ from $B^m[\textsc{height}(k, n)]$ makes $s(X_T) \land
+\textsc{\textoverline{treeFormula}}(k, T_1)$ unsatisfiable, and hence all
 preconditions of the recursive invocation of \textsc{\textoverline{learn}} in
 line~(17) are satisfied.  
 
 At the second last recursive call to \textsc{\textoverline{learn}}, tree $T_1$
-is empty, $n$ is the root node, $\textsc{\textoverline{treeFormula}}(T_1)
-\equiv B^m[\textsc{height}(T_1)](X^T)$; hence $s(X_T) \land
-\textsc{\textoverline{treeFormula}}(T_1) \equiv s(X_T) \land
-B^m[\textsc{height}(T_1)](X^T) \equiv \bot$.  Thus the second postcondition of
+is empty, $n$ is the root node, $\textsc{\textoverline{treeFormula}}(k, T_1)
+\equiv B^m[\textsc{height}(k, T_1)](X^T)$; hence $s(X_T) \land
+\textsc{\textoverline{treeFormula}}(k, T_1) \equiv s(X_T) \land
+B^m[\textsc{height}(k, T_1)](X^T) \equiv \bot$.  Thus the second postcondition of
 \textsc{\textoverline{learn}} holds.
 
 The proof of \textsc{learn} is similar to the above proof of \textsc{learn}. An
-interpolant constructed from $F_1=s(X_T) \land \textsc{treeFormula}(T_1)$
-and $F_2 = \textsc{treeFormula}(T_2)$ has the property $\II \land F_2 \equiv
+interpolant constructed from $F_1=s(X_T) \land \textsc{treeFormula}(k, T_1)$
+and $F_2 = \textsc{treeFormula}(k, T_2)$ has the property $\II \land F_2 \equiv
 \bot$ and the precondition ensures that the controller is unable to force the
 game into $B^M$ playing against the counterexample moves in $T_2$. Thus adding
 $\II$ to $B^M$ maintains the must-invariant satisfying the first postcondition.
 
 Likewise, in the second last recursive call of \textsc{learn} with the empty
-tree $T_1$ and root node $n$: $\textsc{treeFormula}(T_1) \equiv \lnot
-B^M(X_T)$.  Hence $s(X_T) \land \textsc{treeFormula}(T_1) \equiv
+tree $T_1$ and root node $n$: $\textsc{treeFormula}(k, T_1) \equiv \lnot
+B^M(X_T)$.  Hence $s(X_T) \land \textsc{treeFormula}(k, T_1) \equiv
 s(X_T) \land \lnot B^M(X_T) \equiv \bot$. Therefore $s(X_T) \land
 B^M(X_T) \not\equiv \bot$, the second postcondition, is true.
 
