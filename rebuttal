@@ -1,0 +1,53 @@
+Q How is this different to computing the winning region (a la BDD solvers)?
+
+This is addressed in [17], however it is reasonable to require a treatment in
+this paper as well. The traditional approach blindly finds *all* winning states
+until eventually they include the initial state. We attempt to avoid this by a
+more directed search. This is the aim of the abstraction refinement framework,
+to restrict the dueling solvers to consider only opponent moves that may lead
+to spoiling strategies. By computing losing states as we perform this directed
+search the hope is that we can ignore the "unimportant" states reached only by
+moves that cannot win for a player.
+
+Q Experimental weakness
+
+Q Can you construct a system/strategy from the result?
+
+The comments in (42) are correct but it's not the whole story, you still need
+to actually discover the valuations to C that allow you to stay inside W.
+(Otherwise your strategy circuit involves existential quantification.) You
+might be able to do this by remembering the moves you used to learn the states
+inside W (this is essentially what happens in [9]). However, I'm not sure if
+you have any guarantee that these moves keep you inside W. The interpolation
+only guarantees that it will go to B^m[i-1]
+
+Q Can you open source it?
+
+Yes! I will aim to do this before the conference (and reference it in the
+camera ready). 
+
+Q Related work
+
+I will add a reference to the paper in (39) in the camera ready.
+
+Q Does the candidate strategy go beyond T?
+
+No, you were correct in your assessment. Only nodes in the AGT will be filled
+with moves.
+
+Q Why are losing states for a specific AGT losing for the overall game?
+
+I think this is clearer in the edited version but essentially a failure to find
+a candidate when playing against a restricted opponent (in the form of an
+abstract game) means that a candidate cannot be found for an unrestricted
+opponent either. So the states we find via interpolation must also be losing in
+the concrete game.
+
+Q Why is Algorithm 3, line 13 correct?
+
+It doesn't matter that the formula is a disjunction because it is false and (A
+\/ B = False) -> (A /\ B = False).
+
+Q Other confusions and corrections
+
+I've edited the paper to address the majority of listed issues.
