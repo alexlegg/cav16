@@ -183,7 +183,7 @@ We review the bounded synthesis algorithm by Narodytska et
 al.~\cite{narodytska2014}, which is the main building block for our unbounded
 algorithm.
 
-The algorithm consists of two competing solvers, one for the system and one for
+The algorithm consists of two competing solvers, one for the controller and one for
 the environment, that solve abstractions of the safety game. Each solver builds
 a candidate strategy for its corresponding player consisting of assignments to
 $2^C$ and $2^U$ respectively. 
@@ -198,22 +198,22 @@ lead to winning strategies.
 An abstraction of the game restricts actions available to one of the players.
 Specifically, we consider abstractions represented as trees of actions,
 referred to as \emph{abstract game trees} (AGTs).  Figure~\ref{fig:agt} shows
-an example abstract game tree for the controller (abstract game trees for the
-environment are similar).  In the abstract game, the controller is required to
-pick actions from the tree, starting from the root node.  After reaching a
-leaf, it continues playing unrestricted.  The tree in Figure~\ref{fig:agt}
-restricts the initial controller action to the set $\{a, d\}$.  After choosing
-action $a$, the controller is required to play action $b$ in the next round.
-It then reaches a leaf of the tree and continues playing unrestricted.  The
-root of the tree is annotated by the initial state $s$ of the abstract game and
-the bound $k$ on the number of rounds.  We denote $\textsc{nodes}(T)$ the set
-of all nodes of a tree $T$, $\textsc{leaves}(T)$ the subset of leaf nodes.  For
-edge $e$, $\textsc{action}(e)$ is the action that labels the edge, and for node
-$n$, $\textsc{height}(k, n)$ is the distance from n to the last round of a game
-bounded to $k$ rounds.  $\textsc{height}(k, T)$ is the height of the root node
-of the tree.  For node $n$ of the tree, $\textsc{succ}(n)$ is the set of pairs
-$\langle e, n' \rangle$ where $n'$ is a child node of $n$ and $e$ is the edge
-connecting $n$ and $n'$.
+an example abstract game tree restricting the controller (abstract game trees
+restricting the environment are similar).  In the abstract game, the controller
+is required to pick actions from the tree, starting from the root node.  After
+reaching a leaf, it continues playing unrestricted.  The tree in
+Figure~\ref{fig:agt} restricts the initial controller action to the set $\{a,
+d\}$.  After choosing action $a$, the controller is required to play action $b$
+in the next round.  It then reaches a leaf of the tree and continues playing
+unrestricted.  The root of the tree is annotated by the initial state $s$ of
+the abstract game and the bound $k$ on the number of rounds.  We denote
+$\textsc{nodes}(T)$ the set of all nodes of a tree $T$, $\textsc{leaves}(T)$
+the subset of leaf nodes.  For edge $e$, $\textsc{action}(e)$ is the action
+that labels the edge, and for node $n$, $\textsc{height}(k, n)$ is the distance
+from n to the last round of a game bounded to $k$ rounds.  $\textsc{height}(k,
+T)$ is the height of the root node of the tree.  For node $n$ of the tree,
+$\textsc{succ}(n)$ is the set of pairs $\langle e, n' \rangle$ where $n'$ is a
+child node of $n$ and $e$ is the edge connecting $n$ and $n'$.
 
 \tikzset{every node/.style={solid}}
 \tikzstyle{fixed}=[solid]
@@ -388,19 +388,21 @@ illustrated in Algorithm~\ref{alg:bounded}.
 The algorithm takes a concrete game $G$ with maximum bound $\kappa$ as an implicit
 argument.  In addition, it takes a player $p$ (controller or environment),
 state $s$, bound $k$ and an abstract game tree $T$ and returns a winning
-partial strategy for $\textsc{opponent}(p)$, if one exists.  The initial
-invocation of the algorithm takes the initial state $I$, bound $\kappa$ and an
-empty abstract game tree $\emptyset$.  Initially the solver is playing on
-behalf of the environment since that player takes the first move in every game
-round.  The empty game tree does not constrain opponent moves, hence solving
-such an abstraction is equivalent to solving the original concrete game.
+partial strategy for $p$, if one exists.  The initial invocation of the
+algorithm takes the initial state $I$, bound $\kappa$ and an empty abstract
+game tree $\emptyset$.  Initially the solver is playing on behalf of the
+environment since that player takes the first move in every game round.  The
+empty game tree does not constrain opponent moves, hence solving such an
+abstraction is equivalent to solving the original concrete game.
 
 The algorithm is organised as a counterexample-guided abstraction refinement
 (CEGAR) loop.  The first step of the algorithm uses the \textsc{findCandidate}
-function, described below, to come up with a candidate partial strategy for
-$T$. If it fails to find a strategy, this means that no winning partial
-strategy exists for $T$.  If, on the other hand, a candidate partial strategy
-is found, we need to verify if it is indeed winning for $T$.
+function, described below, to come up with a candidate partial strategy that is
+winning when the opponent is restricted to $T$.  If it fails to find a
+strategy, this means that no winning strategy exists against the opponent
+playing its partial strategy represented by $T$.  If, on the other hand, a
+candidate partial strategy is found, we need to verify if it is indeed winning
+for the abstract game $T$.
 
 The \textsc{verify} procedure searches for a \emph{spoiling} counterexample
 strategy in each leaf of the candidate partial strategy by calling
@@ -557,11 +559,11 @@ We extend the bounded synthesis algorithm to learn states losing for one of the
 players from failed attempts to find candidate strategies.  The learning
 procedure kicks in whenever \textsc{findCandidate} cannot find a candidate
 strategy for an abstract game tree $T$ with initial state $s$ and bound $k$.
-For the system, this means the environment partial strategy represented by $T$
+For the controller, this means the environment partial strategy represented by $T$
 will always reach $E$ from $s$ no matter the assignments to $C$ variables (the
-bound is irrelevant).  For the environment, the system can avoid $E$ for $k$
+bound is irrelevant).  For the environment, the controller can avoid $E$ for $k$
 rounds no matter the assignments to $U$ variables. Hence, we have established
-that $s$ is a losing state either always (for the system) or for bound $k$ (for
+that $s$ is a losing state either always (for the controller) or for bound $k$ (for
 the environment. We can learn additional losing states from the tree via
 interpolation.  This is achieved in lines~18--20 in
 Algorithm~\ref{alg:bounded}, enabled in the unbounded version of the algorithm,
