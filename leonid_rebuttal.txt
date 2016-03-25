@@ -1,0 +1,103 @@
+We thank the reviewers for detailed feedback!
+
+We will take your comments into account to correct and improve the 
+presentation.  We will also address concerns raised in the reviews 
+as outlined below.
+
+Reviewer A
+~~~~~~~~~~
+
+Relation to algorithms that compute the winning region:
+
+Our technique can indeed be seen as a hybrid between 
+counterexample-guided synthesis and traditional winning region 
+computation.  By letting the former guide the exploration, we are 
+able to solve the game while learning fewer states.  This is the 
+aim of the abstraction refinement framework, to restrict the 
+dueling solvers to consider only opponent moves that may lead
+to spoiling strategies.  As the reviewer points out, this allows 
+computing deeper stategies where other methods hit the state 
+explosion barrier.
+
+
+Deriving losing states from a specific Abstract Game Tree (AGT):
+
+Assume that player $P$ loses from state $s$ when the opponent $O$ 
+plays according to AGT $t$.  This means that there exists a 
+winning opponent stategy from $s$, hence the state is losing for 
+$P$ by definition and can be added to the set of losing states for 
+the entire game.  
+
+Note that the opposite is not true: assuming that $P$ can win from 
+$s$ when $O$ plays according to $t$, $s$ is not necessarily a 
+winning state for $P$, as there may exist a different AGT $t'$ 
+winning for the opponent.  This is why we can learn losing, but 
+not winning, states from an AGT. 
+
+Reviewer B
+~~~~~~~~~~
+
+Thank you for your in-depth review!
+
+(06) Experiments
+
+We observe that Incremental Induction and Learning-Based backends 
+of Demiurge individually can not solve the 12 instances; however 
+they can solve them when combined in parallel with the 
+template-based backend.  We conjecture that it is the 
+template-based algorithm that solves these instances within the 
+parallel portfolio.  This algorithm is very different from our 
+method as well as other Demiurge algorithms.  We will validate 
+this conjecture and more thoroughly evaluate our solver against 
+the template-based method.
+
+We will also add a theoretical and experimental comparison with 
+the inductive synthesis method of [16].  Note that, as shown in 
+[4], the algorithm of [16] is less efficient than Demiurge, which 
+we compare against.
+
+(07), (42) Strategy computation.
+
+The method described in (42) is correct.  In addition, [9] 
+describes a strategy extraction algorithm that operates on 
+abstract game trees and does not require CPre computation.  This 
+algorithm can be easily adapted to work with our method.
+
+(08) Open sourcing
+
+We are preparing an open source version of the tool for SYNTCOMP 
+2016.
+
+Reviewer C
+~~~~~~~~~~
+
+We will characterize the unique instances solved by our method.  
+Intuitively, in these examples the winning set cannot be compactly 
+represented using BDD or CNF and there exists a winning strategy, 
+where at every round the player picks one of a small number of 
+winning moves (i.e., there exists a compact winning abstract game 
+tree for the player).
+
+Regarding the number of unique solutions: while not a radical 
+improvement, we push the virtual best in the sequential 
+realizability track from 203 to 215 out of 250 instances.  As 
+fewer unsolved instances remain, even such moderate improvements 
+are hard to achieve. 
+
+It is also interesting that we are able to solve at least 12 
+instances that are not solved by the winning solver in the 
+competition, which is more than any other solver, thus emphasizing 
+that our method has complementary strengthes to other techniques.
+
+Reviewer D
+~~~~~~~~~~
+
+Indeed, BDD-based methods are still more scalable and versatile 
+than SAT-based synthesis, including our method.  In this context, 
+our contribution is two-fold.  First, we propose a SAT-based 
+method that works on some classes of problems where BDDs blow up.  
+Hence, it may be productive to combine this method with BDD or 
+other SAT methods in a portfolio.  Second, by developing a new 
+SAT-based synthesis technique, we contribute to the ongoing push 
+to fully exploit the power of the SAT technology in synthesis, 
+inspired by the success of SAT-based verification.
