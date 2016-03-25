@@ -183,26 +183,22 @@ We review the bounded synthesis algorithm by Narodytska et
 al.~\cite{narodytska2014}, which is the main building block for our unbounded
 algorithm.
 
-Realisability for a bounded safety game can be solved by checking a quantified
-formula consisting of the game's transition relation \emph{unrolled} to the
-length of the bounded game. The quantifiers represent the two players of the
-game: universal for the controller and existential for the environment.  Just
-as the players alternate in choosing actions every round of the game, the
-formula is prefixed by a quantifier alternation over $U$ and $C$ for each
-round.
+The algorithm consists of two competing solvers, one for the system and one for
+the environment, that solve abstractions of the safety game. Each solver builds
+a candidate strategy for its corresponding player consisting of assignments to
+$2^C$ and $2^U$ respectively. 
 
-Instead of solving both quantifiers at once, two competing solvers are used to
-solve abstractions of the game. Each solver builds a candidate strategy for its
-corresponding player and uses its opponent's candidate to restrict its own
-search. The solvers communicate to refine one another's candidate strategies by
-finding counterexamples. Eventually one solver will be unable to find a
-counterexample, indicating that its opponent's candidate strategy is a winning
-strategy for the game.
+The game abstraction is initially constructed from an opponent candidate
+strategy. It is refined by counterexamples to the solver's own candidate
+strategy that are formed when the opponent solves the abstract game
+corresponding to that strategy. By abstracting the game in this way we
+conceptually direct the solvers' search to consider opponent actions that may
+lead to winning strategies.
 
 An abstraction of the game restricts actions available to one of the players.
 Specifically, we consider abstractions represented as trees of actions,
-referred to as \emph{abstract game trees} (AGTs).  Figure~\ref{fig:agt} shows an
-example abstract game tree for the controller (abstract game trees for the
+referred to as \emph{abstract game trees} (AGTs).  Figure~\ref{fig:agt} shows
+an example abstract game tree for the controller (abstract game trees for the
 environment are similar).  In the abstract game, the controller is required to
 pick actions from the tree, starting from the root node.  After reaching a
 leaf, it continues playing unrestricted.  The tree in Figure~\ref{fig:agt}
@@ -645,7 +641,7 @@ controller or environment losing states respectively
         \Ensure $s(X_T) \land B^M \not\equiv \bot$
         \Comment $s$ will be added to $B^M$
         \Function{learn}{$s, T$}
-            \IIf{$T = \emptyset$}
+            \IIf{\Call{succ}{$T$} $= \emptyset$}
                 \Return
             \EndIIf
             \State $n \gets $ non-leaf node with min height 
@@ -663,9 +659,9 @@ controller or environment losing states respectively
         \Require \emph{May-invariant} holds
         \Ensure \emph{May-invariant} holds
         \Ensure $s(X_T) \land B^m[$\Call{height}{$k, T$}$] \equiv \bot$
-        \Comment{$s$ will be removed from $B^m[$\Call{height}{$k, T$}$]$}
+        \Comment{$s$ will be removed from $B^m$}
         \Function{\textoverline{learn}}{$s, T$}
-            \IIf{$T = \emptyset$}
+            \IIf{\Call{succ}{$T$} $= \emptyset$}
                 \Return
             \EndIIf
             \State $n \gets $ non-leaf node with min height 
@@ -797,7 +793,7 @@ until the initial state is in $B^M$ (environment wins) or $B^m$ reaches a fixed 
     \begin{algorithmic}[1]
         \Function{solveUnbounded}{$T$}
             \State $B^M \gets E$
-            \State $B^m[0] \gets \top$
+            \State $B^m[0] \gets E$
             \For{$k = 1 \dots$}
                 \IIf{\Call{SAT}{$I \land B^M$}}
                     \Return \texttt{unrealisable} \Comment{Losing in the initial state}
@@ -805,7 +801,7 @@ until the initial state is in $B^M$ (environment wins) or $B^m$ reaches a fixed 
                 \IIf{$\exists i < k . \  B^m[i] \equiv B^m[i+1]$} \Comment{Reached fixed point}
                     \State \hspace{\algorithmicindent} \Return \texttt{realisable} 
                 \EndIIf
-                \State $B^m[k] \gets \top$
+                \State $B^m[k] \gets E$
                 \State \Call{checkBound}{$k$}
             \EndFor
         \EndFunction
