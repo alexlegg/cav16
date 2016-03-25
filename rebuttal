@@ -7,7 +7,8 @@ more directed search. This is the aim of the abstraction refinement framework,
 to restrict the dueling solvers to consider only opponent moves that may lead
 to spoiling strategies. By computing losing states as we perform this directed
 search the hope is that we can ignore the "unimportant" states reached only by
-moves that cannot win for a player.
+moves that cannot win for a player. I've added something explaining this to the
+paper.
 
 Q Experimental weakness
 

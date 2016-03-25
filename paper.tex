@@ -1094,10 +1094,16 @@ Propositional Logic (EPR) approaches.
 SAT-based bounded model checking approaches that unroll the transition relation
 have been extended to unbounded by using conflicts in the solver
 \cite{mcmillan2002}, or by interpolation \cite{mcmillan2003}. However, there
-are no corresponding adaptations to synthesis. Incremental induction
-\cite{bradley2011} is another technique for unbounded model checking with an
-equivalent synthesis method \cite{morgenstern2013}, which computes the set of
-safe states incrementally.
+are no corresponding adaptations to synthesis.
+
+Incremental induction \cite{bradley2011} is another technique for unbounded
+model checking with an equivalent synthesis method \cite{morgenstern2013},
+which computes sets of states that overapproximate the losing states (similar
+to our $B^m$) and another set of winning states (similar to the negation of
+$B^M$). Their algorithm maintains a similar invariant over the sets of losing
+states as our approach and has the same termination condition. It differs in
+how the sets are computed, which it does by inductively proving the number of
+game rounds required by the environment to win from the initial state.
 
 There are different approaches to bounded synthesis than the one described
 here. The authors of \cite{finkbeiner2013} suggest a methodology directly
@@ -1119,9 +1125,15 @@ losing states of the game.
 We presented an extension to an existing bounded synthesis technique that
 promotes it to unbounded safety games. The approach taken as whole differs from
 other synthesis techniques by combining counterexample guided game solving with
-winning set computation. The results show that our approach is able to solve
-more unique instances than other solvers by performing well on certain classes
-of games that are hard for other methodologies.
+winning set computation. Intuitively, the abstraction refinement framework of
+the bounded synthesis algorithm restricts the search to consider only moves
+that may lead to winning strategies. By constructing sets of bad states during
+this search we aim to consider only states that are relevant to a winning
+strategy while solving the unbounded game.
+
+The results show that our approach is able to solve more unique instances than
+other solvers by performing well on certain classes of games that are hard for
+other methodologies.
 
 Future work includes incorporating the solver into a parallel suite of
 communicating solvers~\cite{bloem2014}. There is evidence that different
