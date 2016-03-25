@@ -1,0 +1,432 @@
+===========================================================================
+                            CAV16 Review #146A
+---------------------------------------------------------------------------
+Paper #146: A SAT-Based Counterexample Guided Method for Unbounded
+            Synthesis
+---------------------------------------------------------------------------
+
+
+                      Overall merit: B. Good paper, but I will not champion
+                                        it
+                 Reviewer expertise: 2. Knowledgeable
+
+                         ===== Paper summary =====
+
+The paper develops a new algorithm for reactive synthesis of safety
+properties, by solving the corresponding safety game.
+
+The proposed algorithm is an extension of a previously suggested
+SAT-based approach for synthesizing systems that execute a bounded
+number of iterations. The latter performs a counterexample-guided
+loop to find the runs that comprise a winning strategy, rather than
+computing the winning region (as a set of states).
+
+In order to extend the approach to unbounded synthesis, the authors
+use it iteratively while increasing the bound, and while learning
+"losing" states by interpolation. When the set of "losing" states
+reaches a fixpoint, the bound need not be increased any further,
+and the bounded solution becomes an unbounded solution as well.
+
+The authors implemented their approach and compared it to several
+other tools on the SYNT competition benchmarks. In terms of
+performance, the new approach does not compete well. But it manages
+to solve 12 unique benchmarks, not solved by any other tool.
+
+The paper is seemingly well written, but in fact I found the
+details difficult to follow due to confusing terminology and due to
+some delicate points that are explained informally, or too late.
+
+In particular, since eventually the new algorithm accumulates
+losing states, I am not sure about the conceptual difference
+compared to algorithms that compute the winning regions directly. I
+assume that the use of the bounded algorithm as a basis allows the
+algorithm to reach higher bounds and therefore converge in cases
+where other tools fail. This is not explained in the paper.
+
+                     ===== Comments for authors =====
+
+The presentation of the paper needs to be improved. Below are some
+specific comments.
+
+- p3, 2.1, par 2: the description using quantifiers is natural and
+standard, but it is not used later. I find it distracting rather
+than helping.
+
+- p3, last par, line 3: add acronym AGT when "abstract game trees"
+are first introduced.
+
+- p3 and 4: Terminology is confusing: does "AGT for the controller"
+mean that it restricts the actions of the controller and we want to
+find a strategy for the environment under these restrictions? What
+is the intuitive meaning of the restriction? Do they come from a
+strategy for the controller?
+
+Then "partial strategy for T" -- does it mean strategy for the
+opponent of the player that T is an AGT for? This is confusing. It
+would be better to say "against" or something similar instead of
+"for". Also "winning for T" -- what does it mean? T is the tree...
+
+"Initially the solver is playing on behalf of the
+environment....opponeent moves..." - so the solver plays "for" E
+but the tree is "for" C? Again, I find it very confusing. It seems
+like the tree is not really "for" C. Rather, it captures a set of
+strategies that C can follow.
+
+- p4: partial strategies: would help to explain how come the
+definition is the same for the controller and the environment even
+though the definition of a strategy is different? (environment
+always plays first so its strategy depends only on the state,
+without the move of the controller)
+
+- p4: does the candidate partial strategy that is obtained from
+FindCandidate go beyond the tree T? Wasn't it defined as a mapping
+from tree nodes?
+
+- p5, alg 1, line 29: wrong order of arguments
+
+- p6 last par: "Then copies of state and action... to ACTION(e)" --
+please rephrase. Something seems off in this sentence.
+
+In addition, please clarify what the variables in the formula are
+(refer to the notation used in alg 2).
+
+- p7: "We show that reaching a fixed point in learned states is
+sufficient" -- is there some bound on when a fixed point will be
+reached? (e.g., when the bound is equal to the diameter?)
+
+- p7: "we have established that s is a losing state" -- in general?
+or for the given tree? or with the given bound? What is the formal
+meaning of a losing state here?
+
+I don't understand why states that are computed based on a specific
+abstract tree can be accumulated as losing for any tree. Doesn't
+the tree represent a specific strategy?
+
+- B^M and B^m deserve a better introduction. They should be
+introduced earlier, before getting into the technical details of
+how they are computed (with interpolation). Currently the first
+place where their role is explained more formally is in 3.3. (p10).
+
+- p7, last line: "Fig2b... except n's children" -- the figure does
+include also n's children. On the other hand, the left most branch
+seems missing.
+
+- p8, alg 3: ensure s(X_T) \wedge B^M -- this is not a boolean
+condition. What do you mean here? similarly for \overline{LEARN}.
+
+- p8, alg 3, line 13: why is this decomposition correct? The
+formula for the environment is not purely conjunctive as the one
+for the controller.
+
+- p9, line -2: in parenthesis should be "Alg" 4.
+
+- p10, alg 5, line 6: i<k
+
+- p10, alg 5, line 12: k is missing as an argument.
+
+- p10, 3.3, line 2: "grows" --> "grow"
+
+- p11, par 2, line 1: "Line (11)" -- 12?
+
+- p11, par 2, line 4: \overline missing on TreeFormula?
+
+- p12, line 4: "removes s" -- what is "s"? The algorithm used I
+(initial state).
+
+- p14, line -4: "propose a propose"
+
+- a general question: why is the learning of "losing" states that
+is incorporated into your algorithm different than computing the
+winning regions directly? Can you provide some intuition?
+
+What is the benefit of using the bounded algorithm as a basis? Does
+it let you reach higher bounds faster?
+
+===========================================================================
+                            CAV16 Review #146B
+---------------------------------------------------------------------------
+Paper #146: A SAT-Based Counterexample Guided Method for Unbounded
+            Synthesis
+---------------------------------------------------------------------------
+
+
+                      Overall merit: B. Good paper, but I will not champion
+                                        it
+                 Reviewer expertise: 1. Expert
+
+                         ===== Paper summary =====
+
+This paper addresses the problem of synthesizing a reactive system from a
+given safety or reachability specification. Previous work [17] solves this 
+problem using a SAT solver in a counterexample-guided framework while avoiding 
+to compute a winning region. However, this previous work [17] can only 
+handle bounded safety or reachability, i.e., assumes that the system executes 
+for some bounded number of steps. The current paper extends this previous work 
+[17] to unbounded safety or liveness using Craig interpolation.
+
+This works roughly as follows:
+The algorithm of [17] iteratively refines candidate strategies for the system 
+and its environment based on abstract game trees that restrict the moves of the 
+opponent. From a failed attempt to compute a candidate strategy for one of the 
+players from some starting state s, this state s is known to be losing for that 
+player. Using interpolation, this losing state can be generalized into a larger 
+region of losing states. For the controller in a safety game, this idea is used 
+to incrementally refine an underapproximation BM of the lost states. As soon as 
+the initial state ends up in BM, the controller is known to lose the synthesis 
+game, so the specification is reported as unrealizable. For the environment 
+player, a monotonic sequence of state-regions Bm[i] is iteratively refined, 
+where Bm[i] is a set of states from which the environment may win (so the 
+controller may lose) in <= i steps. Moreover, Bm[i+1] contains all states from 
+which the environment can enforce to reach Bm[i].  As soon as Bm[i]=Bm[i+1] (a 
+fixed point is reached) for some i, and Bm[i] does not contain the initial 
+state, the specification can thus be reported as realizable (because the 
+environment cannot win from more states if granted more steps).
+
+                     ===== Comments for authors =====
+
+All comments are numbered so that they can be responded to by authors (and 
+other reviewers) more easily. Concrete questions are listed in the end.
+
+Strengths:
+(00) The paper fits well to CAV. The topic (reactive synthesis) is important and
+     relevant to the CAV community. (The reactive synthesis competition 
+     SYNTCOMP is also co-located with CAV.) Moreover, SAT-based synthesis 
+     algorithms are a hot research topic at the moment. Finally, the previous
+     paper [17] has already been published at CAV'14.
+(01) Novelty/Significance: The paper strongly builds on [17], but the extension 
+     to handling unbounded safety is far from straightforward and valuable from 
+     a user's perspective. Using interpolation in this context is inspiring. 
+     Other existing work [16] follows a similar principle of iteratively 
+     refining a sequence of formulas that overapproximate the set of states 
+     from which the environment can win in 0,1,2,... steps (which is in turn 
+     inspired by IC3 [5]). However, since this other work [16] uses 
+     unsatisfiable cores instead of interpolation, the two approaches can 
+     complement each other. In summary, I think that the degree of novelty in 
+     this paper may not be classified as "revolutionary", but is still high 
+     enough to be interesting to the CAV community.
+(02) Correctness: The paper appears to be technically sound (modulo a few typos
+     and minor issues, which are easy to fix). A comprehensive correctness 
+     proof is provided. I checked it in fair detail and could not find any
+     holes.
+(03) Clarity: The paper is well written. It is self-contained. The descriptions
+     are mathematically precise and still relatively easy to follow
+     (considering that the algorithm from [17], on which this extension is 
+     based, is quite complex). The discussion of related work is appropriate.
+(04) Technical depth: is appropriate for the given page limit. It would be
+     possible to re-implement the algorithm from the description in the paper.
+     The paper also presents a performance optimization.
+(05) Experiments: The experimental setup is solid: The performance of the new 
+     algorithm is compared with that of all participants in the sequential 
+     track of the SYNTCOMP'15 [1] competition on all benchmarks used in this 
+     competition. Results are promising: the new algorithm has the highest 
+     number of uniquely solved instances, which indicates that the algorithm
+     has a high potential for complementing other algorithms. However, this
+     statement has to be taken with a grain of salt (see comment nr. 05).
+
+Weaknesses:
+(06) Experiments: Not all known synthesis algorithms participated in 
+     SYNTCOMP'15. Of course, one can never compare a new algorithm to every
+     existing algorithm. However, a comparison with [16] would have been nice
+     because this algorithm is similar in spirit. [16] is implemented in
+     DEMIURGE, both as stand-alone method as well as in a portfolio approach.
+     In fact, all instances that are reported as uniquely solved by the 
+     presented algorithm are also solved by DEMIURGE with this portfolio 
+     approach in the parallel track of SYNTCOMP'15 (within < 44 seconds each).
+     See http://syntcomp.cs.uni-saarland.de/syntcomp2015/experiment/6/.
+     Since the new algorithm does not perform too well on average, one of the
+     main selling arguments is its ability to solve instances that cannot be
+     solved by other methods. Integrating it into the portfolio approach of
+     DEMIURGE is mentioned as promising future work. However, at least for the 
+     SYNTCOMP'15 benchmarks, the added value of such an integration is 
+     questionable.
+(07) The algorithm in the paper only decides if the specification is realizable.
+     It is not obvious how to construct a system from the intermediate results,
+     though. ([16] uses similar invariants, but leaves an extension to compute
+     winning strategies for future work as well.)     
+     There are applications for plain decision procedures for the
+     realizability of a specification (see [16]). But a prospect of being usable
+     for actually synthesizing systems would extend the applicability
+     considerably.
+     See comment nr. 42 for an attempt to resolve this.
+(08) Making the tool publicly available would be an additional benefit for the
+     community because it makes it easier for other researchers to extend the
+     work and to compare with it. However, the paper mentions no such plans.
+     (This is not a weakness, but merely the absence of a strength.)
+(09) There is quite a long list of minor issues, which indicates that the paper
+     is not yet in a mature state. But all these minor issues are easy to fix.
+     
+Minor issues and typos:
+(10) Page 1, Line 20: "The reactive synthesis problem is 2EXPTIME-complete ..."
+     This statement is a bit dangerous in this general form. The problem is 
+     2EXPTIME-complete when starting from an LTL specification. For safety 
+     specifications, the problem is in EXP [6] (when starting from a symbolic
+     representation of the game graph).
+(11) Page 3, Line 1: "A controller strategy \pi^c: (X,U) -> C ..."
+     According to the definition on the previous page, X, U and C are sets of
+     variables and not sets of states/actions. Hence, it would be better to
+     write "\pi^c: (2^X \times 2^U) -> 2^C". The same goes for the environment
+     strategy in Line 6 on page 3.
+(12) Page 3, Line 9: There is a typo in the indices:
+     "(x_0 , \pi^e(x_1), c_1), (x_1 , \pi^e(x_1), c_1) ..." 
+     --> "(x_0 , \pi^e(x_0), c_0), (x_1 , \pi^e(x_1), c_1) ..."
+(13) Page 4, Line 11: "are checked and by a call" --> "are checked by a call"
+(14) Page 5, Algorithm 1, Line 23: If T is the empty tree (as we have it in the
+     initial call), then Line 23 would return the empty set, just like Line
+     21. Thus, the caller cannot distinguish the two cases. Returning a special
+     constant (like None or NULL) in Line 21 would be better.
+(15) Page 5, Algorithm 1, Line 29: There is a mistake in the order of arguments.
+     solveAbstract(opponent(p),k',s',0) --> solveAbstract(opponent(p),s',k',0)
+(16) Page 5, Algorithm 1, Line 30/32: 
+     Line 30 should return <true,l,u> instead of <false,l,u>
+     Line 32 should return <false,0,0> instead of <true,0,0>
+     The reason: when VERIFY is called, the first item of the result is used as
+     if it would mean "counterexample found" and not "candidate correct".  
+(17) Page 7, Figure 2: I think Figure 2b is wrong. Compared to Figure 2a, the
+     right branch should be truncated instead of the left branch.  That is, n 
+     should have *no* children but the a-child of <s,2> should have one child.
+(18) Page 8, Algorithm 3, "Ensure: s(X_T) \wedge B^M" --> Here I would write
+     "Ensure: s(X_T) \wedge B^M != \bot" or "is satisfiable".
+(19) Page 8, Algorithm 3, Line 3: It is not clear to me how splitting is done if
+     T consists of a single root node. I assume that both T_1 and T_2 are empty
+     in this case. This would be consistent with the proof on page 11 (last 
+     paragraph in Section 3.4).
+(20) Page 8, Algorithm 3, Line 14: I suggest to add a note saying that Height(n)
+     is always the height of n in the *original* tree T (I will call it T_0) 
+     passed to \overline{LEARN} by FindCandidate, and *not* the height of n in 
+     T as passed as argument to \overline{LEARN}. (Otherwise, Height(n) would 
+     always be 1).
+     If I am not mistaken, the same goes for Height(T) in Line 13 and Line 10
+     of Algorithm 4: it should also be the height of node T in T_0.
+     In order to make this more clear, one could consider to write something
+     like Height(n, T_0)/Height(T, T_0).
+(21) Page 9, Algorithm 4, Line 14: At first, I was wondering if there should be
+     brackets around Line 14 (usually the AND binds stronger than the OR).
+     In your case, there is no semantic difference because the B^m[i] are
+     getting stricter and stricter with decreasing i. But this invariant is 
+     only presented later. So adding a bracket may make formula more intuitive 
+     to read.
+(22) Page 9, Line 5: "states that lost to T_2" --> "states that are lost to T_2"
+(23) Page 10, Algorithm 5, Line 3: I'm wondering whether you should initialize
+     B^m[0] to E instead of \top. This does not affect the correctness, but I 
+     think it improves the readability. The may-invariant also says that
+     B^m[i] \subseteq B^m[i+1] for all i. With B^m[0] initialized to \top, 
+     this does not hold for i=0 (because Algorithm 3 never touches B^m[0]).
+(24) Page 10, Algorithm 5, Line 12: The call to SolveAbstract misses the
+     parameter k.
+(25) Page 10, Line 6: "sets B^M[i] grows" --> "sets B^M[i] grow"
+(26) Page 11, Line 6: "TreeFormula(T)" --> "\overline{TreeFormula(T)}"
+(27) Page 11, Line 13: "force the game into B^m[Height(n)]"
+     --> "force the game into B^m[Height(n)-1]"
+(28) Page 11, Line 14: "I \cap Upre(B^m[Height(n)]) = \emptyset"
+     --> "I \cap Upre(B^m[Height(n)-1]) = \emptyset"
+(29) Page 11, Line 16: "I \cap UPre(i)" --> "I \cap UPre(B^m[i])"
+     (here, the index is fine because you say i < Height(n) and not <=)
+(30) Page 11, Line 16: It may be worth adding a sentence explaining why 
+     "I \cap UPre(B^m[i]) = \emptyset" holds -- this may not be obvious to
+     all readers. (The reason is that UPre is monotonic, i.e., 
+     (A \subseteq B) implies (UPre(A) \subseteq UPre(B)))
+(31) Page 11, Line 24+25: "Height(T)" --> "Height(T_1)"
+(32) Page 11, Line 35: "s(X_T) \wedge B^M(X_T)" --> Here I would again write
+     "s(X_T) \wedge B^M(X_T) != \bot" or "is satisfiable".
+(33) Sometimes you write "counterexample-guided" and sometimes 
+     "counterexample guided"
+(34) Page 11, Correctness proof: 
+     You never argue why returning "realizable" in Line 6 of Algorithm 5 is
+     justified (i.e., why reaching a fixed point means that the controller 
+     wins). I think this is not straightforward to see. I suggest to add 
+     something like:
+     (a) B^m[i] contains all states from which the environment can win in at 
+         most i steps.   
+     (b) B^m[i] = B^m[i+1] implies that Upre(B^m[i]) \subseteq B^m[i]
+        (because of the may-invariant).  That is, the environment cannot enforce
+        reaching B^m[i] from any state outside of B^m[i].  Hence, B^m[i] must be
+        an over-approximation of the winning region for the environment.
+     (c) I \not\in B^m[k] holds because of the post-condition of ChechBound.
+        (If it would not hold, we would have I \in B^M, so Line 5 would return
+         "unrealizable".)
+     (d) Because of the may-invariant, we also know that I \not \in B^m[i].
+        This means: I is not in the overapproximation of the winning region for 
+        the environment, and thus also not in the actual winning region of the
+        environment.      
+     The fact that returning "unrealizable" in line 5 is justified is more 
+     obvious.    
+(35) Page 14, Line 15: "et al" --> "et al."
+(36) Page 14, Line 15: "authors propose a propose employing" 
+     --> "authors propose employing"
+(37) Page 14, last line: "Effectively Propositional Logic (EPL)"
+     --> EPR is more common than EPL as abbreviation.
+(38) Page 14, line 5: "[16], which computes the set of safe states 
+     incrementally." -->
+     This is very much over-simplified. [16] also computes a sequence of
+     may-losing regions, just like this paper does in B^m[i]. The invariants are
+     also very similar. One or two additional sentences to highlight the 
+     similarities would be good.
+(39) Page 15, related work:
+     I suggest to add a reference to 
+       Ting-Wei Chiang, Jie-Hong R. Jiang: Property-Directed Synthesis of 
+       Reactive Systems from Safety Specifications. ICCAD 2015: 794-801   
+     as additional reference. It is also SAT-based in IC3-inspired.
+(40) Page 15, References: There are several minor formatting issues
+     ("bdds" --> "BDDs", "sat --> SAT", missing umlauts, ...) but I think
+     Springer unifies the references anyway.
+(41) The paper mixes British English (mostly) with American English 
+     (occasionally). E.g., both "realizability" and "realisability" are used.
+(42) I think it is possible to compute a winning strategy from the intermediate
+     results. Mentioning this possibility would strengthen the paper.
+     We have that B^m[i] = B^m[i+1] for some i. Let W = \neg B^m[i].
+     If I am not mistaken, a winning strategy for the controller can be defined
+     by assigning C always in such a way that the next state is in W.
+     The reason is as follows. From the may-invariant, we know that
+       Upre(B^m[i]) --> B^m[i]
+     Since Upre(A) = \neg Cpre(\neg A), we can also write this as:
+       (\neg Cpre(W)) --> (\neg W)
+     Logic re-writing gives:  W --> CPre(W)
+     That is, from all states of W, the controller can set C in such a way that
+     the next state is in W again.
+     The initial state I is in W because I \not in B^m[i] follows from the
+     post-condition of CheckBound. Hence, the controller can stay in W forever.
+     Finally W does not intersect with the unsafe states E because E --> B^m[i].
+
+Questions to the authors:
+(Q1) Any plans to make the implementation of the algorithm publicly available?
+(Q2) Can you confirm the thoughts in comment nr. 42?
+
+===========================================================================
+                            CAV16 Review #146C
+---------------------------------------------------------------------------
+Paper #146: A SAT-Based Counterexample Guided Method for Unbounded
+            Synthesis
+---------------------------------------------------------------------------
+
+
+                      Overall merit: B. Good paper, but I will not champion
+                                        it
+                 Reviewer expertise: 3. Some familiarity
+
+                         ===== Paper summary =====
+
+The paper presents an algorithm for synthesis of finite state systems whose computations are of unbounded length, yet via a sat based, cegar scheme. For an outsider, the cleverness/originality of the method is beyond reach, yet the ingredient seem to make sense and appear to be pieced together in an expected way. I wish the paper had a high level summary of the crux of the approach, and perhaps even an end-to-end example. The experimental evaluation seems to show that the method has some potential, and could be considered complementary to the existing techniques. Here it would be nice to have a discussion on why the method seems to work and what is so particular about the examples on which it's uniquely successful. I'm not entirely convinced that 12 unique solutions vs. 10 unique solutions is a big deal, the insight why would be valuable. I'd let the experts decide on the acceptance.
+
+===========================================================================
+                            CAV16 Review #146D
+---------------------------------------------------------------------------
+Paper #146: A SAT-Based Counterexample Guided Method for Unbounded
+            Synthesis
+---------------------------------------------------------------------------
+
+
+                      Overall merit: B. Good paper, but I will not champion
+                                        it
+                 Reviewer expertise: 1. Expert
+
+                         ===== Paper summary =====
+
+The paper proposes a new method for solving safety games. It combines two existing ideas: 1. unbounded model checking of safety properties using SAT solvers and interpolation, and 2. bounded synthesis using counterexample guided abstraction. Of these, 1 is a well established effective technique, 2 is a recently proposed idea whose merits are yet unclear. Still this seems to be a combination worth investigating. Thanks to recently started SYNTCOMP, now we have a set of benchmarks for evaluating game solvers. Authors show that they can solve a few benchmarks that could not be solved earlier, even though the number of benchmarks their prototype can solve is much smaller than existing tools.
+
+I have mixed feelings about this approach. On one hand, the only way to check whether an approach works is by working out the details and building a prototype. This requires a lot of effort, and should generally be encouraged. On the other hand, there is no reason to believe that techniques (e.g. counterexample guided abstraction refinement) that work well for reachability will work for alternating reachability. Conclusion of Table 1 is that basic fixpoint computation over alternating predecessors using BDDs is still the best way to solve safety games.
+
+                     ===== Comments for authors =====
+
+Notation is sloppy. You should make clear distinction between variables, valuations of variables, and sets of valuations
+(e.g. a controller strategy is clearly not a mapping from (X,U) to C).
+
