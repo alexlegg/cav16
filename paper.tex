@@ -27,18 +27,15 @@
 
 \title{A SAT-Based Counterexample Guided Method for Unbounded Synthesis}
 
-\author{}
-\institute{}
+\author{Alexander Legg\inst{1} 
+    \and Nina Narodytska\inst{2}
+    \and Leonid Ryzhyk\inst{2}}
 
-%\author{Alexander Legg\inst{1} 
-%    \and Nina Narodytska\inst{2}
-%    \and Leonid Ryzhyk\inst{2}}
-%
-%\institute{NICTA\thanks{NICTA is funded by the Australian Government as represented by the Department of Broadband,
-%    Communications and the Digital Economy and the Australian Research Council through the ICT
-%    Centre of Excellence program.} and UNSW \\
-%    \email{alexander.legg@nicta.com.au}
-%    \and Samsung Research America}
+\institute{NICTA\thanks{NICTA is funded by the Australian Government as represented by the Department of Broadband,
+    Communications and the Digital Economy and the Australian Research Council through the ICT
+    Centre of Excellence program.} and UNSW \\
+    \email{alexander.legg@nicta.com.au}
+    \and Samsung Research America}
 
 \maketitle
 
@@ -226,13 +223,13 @@ child node of $n$ and $e$ is the edge connecting $n$ and $n'$.
             \node [circle,draw] (root){}
                 child {node [circle,draw] {}
                     child {node [circle,draw] {}
-                        edge from parent [fixed] node [left] {$b$}
+                        edge from parent [fixed] node [left] {\texttt{req=0}}
                     }
-                    edge from parent [fixed] node [left] {$a$}
+                    edge from parent [fixed] node [left] {\texttt{req=0}}
                 }
-                child {node [circle,draw] {}
-                    edge from parent [fixed] node [right] {$d$}
-                }
+%%%                child {node [circle,draw] {}
+%%%                    edge from parent [fixed] node [right] {\texttt{gr=1}}
+%%%                }
                 node [above=4pt] {$\langle s, k \rangle$};
         \end{tikzpicture}
         \captionsetup{width=.8\textwidth}
@@ -245,17 +242,17 @@ child node of $n$ and $e$ is the edge connecting $n$ and $n'$.
             \node [circle,draw] (root){}
                 child {node [circle,draw] {}
                     child {node [circle,draw] {}
-                        node [left=4pt] {$\epsilon$}
-                        edge from parent [fixed] node [left] {$b$}
+                        node [left=4pt] {\texttt{gr0=0, gr1=0}}
+                        edge from parent [fixed] node [left] {\texttt{req=0}}
                     }
-                    node [left=4pt] {$\beta$}
-                    edge from parent [fixed] node [left] {$a$}
+                    node [left=4pt] {\texttt{gr0=0, gr1=0}}
+                    edge from parent [fixed] node [left] {\texttt{req=0}}
                 }
-                child {node [circle,draw] {}
-                    node [left=4pt] {$\gamma$}
-                    edge from parent [fixed] node [right] {$d$}
-                }
-                node [right=4pt] {$\alpha$}
+%%%                child {node [circle,draw] {}
+%%%                    node [left=4pt] {\texttt{req=1}}
+%%%                    edge from parent [fixed] node [right] {\texttt{gr=1}}
+%%%                }
+                node [left=4pt] {}
                 node [above=4pt] {$\langle s, k \rangle$};
         \end{tikzpicture}
         \captionsetup{width=.8\textwidth}
@@ -268,15 +265,12 @@ child node of $n$ and $e$ is the edge connecting $n$ and $n'$.
             \node [circle,draw] (root){}
                 child {node [circle,draw] {}
                     child {node [circle,draw] {}
-                        edge from parent [fixed] node [left] {$b$}
+                        edge from parent [fixed] node [left] {\texttt{req=0}}
                     }
-                    edge from parent [fixed] node [left] {$a$}
-                }
-                child {node [circle,draw] {}
                     child {node [circle,draw] {}
-                        edge from parent [fixed] node [right] {$e$}
+                        edge from parent [fixed] node [right] {\texttt{req=1}}
                     }
-                    edge from parent [fixed] node [right] {$d$}
+                    edge from parent [fixed] node [left] {\texttt{req=0}}
                 }
                 node [above=4pt] {$\langle s, k \rangle$};
         \end{tikzpicture}
