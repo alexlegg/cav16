@@ -181,9 +181,9 @@ al.~\cite{narodytska2014}, which is the main building block for our unbounded
 algorithm.
 
 First, we introduce a running example to assist the explanation. We consider a
-simple arbiter system in which the environment requests for either 1 or 0
+simple arbiter system in which the environment requests for either 1 or 2
 resources, and the controller may grant access to two resources. The controller
-must ensure that the number of unhandled requests is not $\geq 2$.
+must ensure that the number of unhandled requests is not $\geq 3$.
 Figure~\ref{fig:example} shows the variables (\ref{fig:examplevars}) and the
 formulas for computing next-state variables (\ref{fig:exampletrans}) for this
 example.
@@ -194,7 +194,7 @@ example.
         \begin{tabular}{l | l | l}
             \textbf{Controllable} & \textbf{Uncontrollable} & \textbf{State} \\
             \hline
-            \texttt{request = \{0, 1\}} & \texttt{grant0 = \{0, 1\}} & \texttt{resource0 = \{0, 1\}} \\
+            \texttt{request = \{1, 2\}} & \texttt{grant0 = \{0, 1\}} & \texttt{resource0 = \{0, 1\}} \\
             & \texttt{grant1 = \{0, 1\}} & \texttt{resource1 = \{0, 1\}} \\
             & & \texttt{nrequests = \{0, 1, 2, 3\}} \\
         \end{tabular}
@@ -217,10 +217,10 @@ example.
 \end{figure}
 
 
-The algorithm consists of two competing solvers, one for the controller and one for
-the environment, that solve abstractions of the safety game. Each solver builds
-a candidate strategy for its corresponding player consisting of assignments to
-$2^C$ and $2^U$ respectively. 
+The bounded synthesis algorithm consists of two competing solvers, one for the
+controller and one for the environment, that solve abstractions of the safety
+game. Each solver builds a candidate strategy for its corresponding player
+consisting of assignments to $2^C$ and $2^U$ respectively. 
 
 The game abstraction is initially constructed from an opponent candidate
 strategy. It is refined by counterexamples to the solver's own candidate
@@ -232,22 +232,23 @@ lead to winning strategies.
 An abstraction of the game restricts actions available to one of the players.
 Specifically, we consider abstractions represented as trees of actions,
 referred to as \emph{abstract game trees} (AGTs).  Figure~\ref{fig:agt} shows
-an example abstract game tree restricting the controller (abstract game trees
-restricting the environment are similar).  In the abstract game, the controller
-is required to pick actions from the tree, starting from the root node.  After
-reaching a leaf, it continues playing unrestricted.  The tree in
-Figure~\ref{fig:agt} restricts the initial controller action to the set $\{a,
-d\}$.  After choosing action $a$, the controller is required to play action $b$
-in the next round.  It then reaches a leaf of the tree and continues playing
-unrestricted.  The root of the tree is annotated by the initial state $s$ of
-the abstract game and the bound $k$ on the number of rounds.  We denote
-$\textsc{nodes}(T)$ the set of all nodes of a tree $T$, $\textsc{leaves}(T)$
-the subset of leaf nodes.  For edge $e$, $\textsc{action}(e)$ is the action
-that labels the edge, and for node $n$, $\textsc{height}(k, n)$ is the distance
-from n to the last round of a game bounded to $k$ rounds.  $\textsc{height}(k,
-T)$ is the height of the root node of the tree.  For node $n$ of the tree,
-$\textsc{succ}(n)$ is the set of pairs $\langle e, n' \rangle$ where $n'$ is a
-child node of $n$ and $e$ is the edge connecting $n$ and $n'$.
+an example abstract game tree restricting the environment (abstract game trees
+restricting the controller are similar).  In the abstract game, the controller
+can freely choose actions whilst the environment is required to pick actions
+from the tree.  After reaching a leaf, the enivironment continues playing
+unrestricted.  The tree in Figure~\ref{fig:agt} restricts the first and second
+environment actions to \texttt{request=1}. It then reaches a leaf of the tree
+and continues playing unrestricted. 
+
+The root of the tree is annotated by the initial state $s$ of the abstract game
+and the bound $k$ on the number of rounds.  We denote $\textsc{nodes}(T)$ the
+set of all nodes of a tree $T$, $\textsc{leaves}(T)$ the subset of leaf nodes.
+For edge $e$, $\textsc{action}(e)$ is the action that labels the edge, and for
+node $n$, $\textsc{height}(k, n)$ is the distance from n to the last round of a
+game bounded to $k$ rounds.  $\textsc{height}(k, T)$ is the height of the root
+node of the tree.  For node $n$ of the tree, $\textsc{succ}(n)$ is the set of
+pairs $\langle e, n' \rangle$ where $n'$ is a child node of $n$ and $e$ is the
+edge connecting $n$ and $n'$.
 
 \tikzset{every node/.style={solid}}
 \tikzstyle{fixed}=[solid]
@@ -260,9 +261,9 @@ child node of $n$ and $e$ is the edge connecting $n$ and $n'$.
             \node [circle,draw] (root){}
                 child {node [circle,draw] {}
                     child {node [circle,draw] {}
-                        edge from parent [fixed] node [left] {\texttt{req=0}}
+                        edge from parent [fixed] node [left] {\texttt{req=1}}
                     }
-                    edge from parent [fixed] node [left] {\texttt{req=0}}
+                    edge from parent [fixed] node [left] {\texttt{req=1}}
                 }
 %%%                child {node [circle,draw] {}
 %%%                    edge from parent [fixed] node [right] {\texttt{gr=1}}
@@ -279,11 +280,11 @@ child node of $n$ and $e$ is the edge connecting $n$ and $n'$.
             \node [circle,draw] (root){}
                 child {node [circle,draw] {}
                     child {node [circle,draw] {}
-                        node [left=4pt] {\texttt{gr0=0, gr1=0}}
-                        edge from parent [fixed] node [left] {\texttt{req=0}}
+                        node [left=4pt] {\texttt{gr0=1, gr1=0}}
+                        edge from parent [fixed] node [left] {\texttt{req=1}}
                     }
-                    node [left=4pt] {\texttt{gr0=0, gr1=0}}
-                    edge from parent [fixed] node [left] {\texttt{req=0}}
+                    node [left=4pt] {\texttt{gr0=0, gr1=1}}
+                    edge from parent [fixed] node [left] {\texttt{req=1}}
                 }
 %%%                child {node [circle,draw] {}
 %%%                    node [left=4pt] {\texttt{req=1}}
@@ -302,12 +303,12 @@ child node of $n$ and $e$ is the edge connecting $n$ and $n'$.
             \node [circle,draw] (root){}
                 child {node [circle,draw] {}
                     child {node [circle,draw] {}
-                        edge from parent [fixed] node [left] {\texttt{req=0}}
+                        edge from parent [fixed] node [left] {\texttt{req=1}}
                     }
                     child {node [circle,draw] {}
-                        edge from parent [fixed] node [right] {\texttt{req=1}}
+                        edge from parent [fixed] node [right] {\texttt{req=2}}
                     }
-                    edge from parent [fixed] node [left] {\texttt{req=0}}
+                    edge from parent [fixed] node [left] {\texttt{req=1}}
                 }
                 node [above=4pt] {$\langle s, k \rangle$};
         \end{tikzpicture}
@@ -347,16 +348,16 @@ child node of $n$ and $e$ is the edge connecting $n$ and $n'$.
     \label{fig:alltrees}
 \end{figure}
 
-Given a controller (environment) abstract game tree $T$ a \emph{partial
-strategy} $Strat: \textsc{nodes}(T) \rightarrow U$ ($Strat: \textsc{nodes}(T)
-\rightarrow C$) labels each node of the tree with the opponent's action to be
-played in that node.   Figure~\ref{fig:strategy} shows an example partial
-strategy.  The environment starts by choosing action $\alpha$.  If the
-controller plays $a$, the environment responds with $\beta$ in the next round,
-and so on. Given a partial strategy $Strat$, we can map each leaf $l$ of the
-abstract game tree to $\langle s',i'\rangle=\textsc{outcome}(\langle s,
-i\rangle, Strat, l)$ obtained by playing all controllable and uncontrollable
-actions on the path from the root to the leaf.
+Given an environment (controller) abstract game tree $T$ a \emph{partial
+strategy} $Strat: \textsc{nodes}(T) \rightarrow C$ ($Strat: \textsc{nodes}(T)
+\rightarrow U$) labels each node of the tree with the controller's
+(environment's) action to be played in that node.   Given a partial strategy
+$Strat$, we can map each leaf $l$ of the abstract game tree to $\langle
+s',i'\rangle=\textsc{outcome}(\langle s, i\rangle, Strat, l)$ obtained by
+playing all controllable and uncontrollable actions on the path from the root
+to the leaf.  Figure~\ref{fig:strategy} shows an example partial strategy for
+the controller.  The controller responds to the requests by first granting
+access to \texttt{resource1}, then to \texttt{resource0} in the second round.
 
 The bounded synthesis algorithm solves abstract game trees by invoking a SAT
 solver to search for candidate partial strategies. Candidate strategies are
@@ -443,8 +444,10 @@ of the controller player.
 If the dual solver can find no spoiling strategy at any of the leaves, then the
 candidate partial strategy is a winning one. Otherwise, \textsc{verify} returns
 the move used by the opponent to defeat a leaf of the partial strategy, which
-is appended to the corresponding node in $T$ in order to refine it in line~(9)
-as shown in Figure~(\ref{fig:refined}).
+is appended to the corresponding node in $T$ in order to refine it in line~(9).
+In our example, the controller's partial strategy in Figure~\ref{fig:strategy}
+is defeated by the counterexample action \texttt{req=2}.
+Figure~\ref{fig:refined} shows a refined AGT that includes this action.
 
 We solve the refined game by recursively invoking \textsc{solveAbstract} on it.
 If no partial winning strategy is found for the refined game then there is also
