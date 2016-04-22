@@ -609,25 +609,26 @@ controller or environment losing states respectively
     \centering
     \begin{subfigure}[t]{.32\textwidth}
         \centering
+
         \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
             \node [circle,draw] (root){}
                 child {node [circle,draw] {}
-                    child {node [circle,draw] {}
-                        edge from parent [fixed] node [left] {$b$}
-                    }
-                    edge from parent [fixed] node [left] {$a$}
-                }
-                child {node [circle,draw] (n) {}
                     child {node [circle,draw,right=5pt] {}
-                        edge from parent [fixed] node [left] {$e$}
+                        edge from parent [fixed] node [left] {\texttt{req=1}}
                     }
                     child {node [circle,draw,left=5pt] {}
-                        edge from parent [fixed] node [right] {$f$}
+                        edge from parent [fixed] node [right] {\texttt{req=2}}
                     }
-                    edge from parent [fixed] {node [right] {$d$}}
+                    node [left=5pt] {$n$}
+                    edge from parent [fixed] node [left] {\texttt{req=1}}
                 }
-                node [above=4pt] {$\langle s, 2 \rangle$};
-            \node [right=1pt of n] {$n$};
+                child {node [circle,draw] (n) {}
+                    child {node [circle,draw] {}
+                        edge from parent [fixed] node [right] {\texttt{req=2}}
+                    }
+                    edge from parent [fixed] node [right] {\texttt{req=2}}
+                }
+                node [above=4pt] {$\langle s, k \rangle$};
         \end{tikzpicture}
         \caption{A losing AGT $T$}
         \label{fig:interpolatetree}
@@ -637,16 +638,16 @@ controller or environment losing states respectively
         \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
             \node [circle,draw] (root){}
                 child {node [circle,draw] {}
-                    child {node [circle,draw] {}
-                        edge from parent [fixed] node [left] {$b$}
-                    }
-                    edge from parent [fixed] node [left] {$a$}
+                    node [left=5pt] {$n$}
+                    edge from parent [fixed] node [left] {\texttt{req=1}}
                 }
                 child {node [circle,draw] (n) {}
-                    edge from parent [fixed] node [right] {$d$}
+                    child {node [circle,draw] {}
+                        edge from parent [fixed] node [right] {\texttt{req=2}}
+                    }
+                    edge from parent [fixed] node [right] {\texttt{req=2}}
                 }
-                node [above=4pt] {$\langle s, 2 \rangle$};
-            \node [right=1pt of n] {$n$};
+                node [above=4pt] {$\langle s, k \rangle$};
         \end{tikzpicture}
         \caption{Tree slice $T_1$}
         \label{fig:treef1}
@@ -656,12 +657,12 @@ controller or environment losing states respectively
         \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
             \node [circle,draw] {}
                 child {node [circle,draw,right=5pt] {}
-                    edge from parent [fixed] node [left] {$e$}
+                    edge from parent [fixed] node [left] {\texttt{req=1}}
                 }
                 child {node [circle,draw,left=5pt] {}
-                    edge from parent [fixed] node [right] {$f$}
+                    edge from parent [fixed] node [right] {\texttt{req=2}}
                 }
-                node [right=5pt] {$n$};
+                node [left=5pt] {$n$};
         \end{tikzpicture}
         \caption{Tree slice $T_2$}
         \label{fig:treef2}
