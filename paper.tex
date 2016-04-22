@@ -180,6 +180,43 @@ We review the bounded synthesis algorithm by Narodytska et
 al.~\cite{narodytska2014}, which is the main building block for our unbounded
 algorithm.
 
+First, we introduce a running example to assist the explanation. We consider a
+simple arbiter system in which the environment requests for either 1 or 0
+resources, and the controller may grant access to two resources. The controller
+must ensure that the number of unhandled requests is not $\geq 2$.
+Figure~\ref{fig:example} shows the variables (\ref{fig:examplevars}) and the
+formulas for computing next-state variables (\ref{fig:exampletrans}) for this
+example.
+
+\begin{figure}
+    \begin{subfigure}[t]{\textwidth}
+        \centering
+        \begin{tabular}{l | l | l}
+            \textbf{Controllable} & \textbf{Uncontrollable} & \textbf{State} \\
+            \hline
+            \texttt{request = \{0, 1\}} & \texttt{grant0 = \{0, 1\}} & \texttt{resource0 = \{0, 1\}} \\
+            & \texttt{grant1 = \{0, 1\}} & \texttt{resource1 = \{0, 1\}} \\
+            & & \texttt{nrequests = \{0, 1, 2, 3\}} \\
+        \end{tabular}
+        \caption{Variables}
+        \label{fig:examplevars}
+    \end{subfigure}
+
+    \begin{subfigure}[t]{\textwidth}
+        \begin {align*}
+            \texttt{resource0'} & \texttt{ = grant0;} \\
+            \texttt{resource1'} & \texttt{ = grant1;} \\
+            \texttt{nrequests'} & \texttt{ = (nrequests + request >= resource0 + resource1)} \\ 
+                                & \texttt{ ? (nrequests + request - resource0 - resource1) : 0;}
+        \end{align*}
+        \caption{Transition Relation}
+        \label{fig:exampletrans}
+    \end{subfigure}
+    \caption{Example}
+    \label{fig:example}
+\end{figure}
+
+
 The algorithm consists of two competing solvers, one for the controller and one for
 the environment, that solve abstractions of the safety game. Each solver builds
 a candidate strategy for its corresponding player consisting of assignments to
