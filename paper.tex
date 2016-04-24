@@ -715,21 +715,24 @@ controller or environment losing states respectively
 \end{algorithm}
 
 Consider the game tree $T$ in
-Figure~\ref{fig:interpolatetree}, whose edges are labelled with environment
-actions.  Assume that there does not exist a partial strategy for the controller
-winning against this tree and that the \textsc{findCandidate} function could
-not find a candidate strategy. We choose a non-leaf node $n$ of $T$ with
-maximal depth, i.e., a node whose children are leafs
-(Algorithm~\ref{alg:learn}, line~3). We then split the tree at $n$ such that
-both slices $T_1$ and $T_2$ contain a copy of $n$ (line~4).
+Figure~\ref{fig:interpolatetree}, whose edges are labelled with controller
+actions.  There does not exist a partial strategy for the environment that is
+winning against the controller actions in this tree since any requests will
+always be granted. Thus the \textsc{findCandidate} function can not find a
+candidate strategy. We now learn the states for which these controller actions
+can force the game to stay in the controller winning set.
+
+We choose a non-leaf node $n$ of $T$ with maximal depth, i.e., a node whose
+children are leafs (Algorithm~\ref{alg:learn}, line~3). We then split the tree
+at $n$ such that both slices $T_1$ and $T_2$ contain a copy of $n$ (line~4).
 Figure~\ref{fig:treef1} shows $T_1$, which contains all of $T$ except $n$'s
 children, and $T_2$ (Figure~\ref{fig:treef2}), which contains only $n$ and its
 children.  There is no candidate strategy for $T$ so $s \land
 \textsc{treeFormula}(k, T)$ is unsatisfiable.  By construction,
 $\textsc{treeFormula}(k, T) \equiv \textsc{treeFormula}(k, T_1) \land
-\textsc{treeFormula}(k, T_2)$ and hence $s \land \textsc{treeFormula}(k, T_1) \land
-\textsc{treeFormula}(k, T_2)$ is also unsatisfiable. This enables the construction
-of an \emph{interpolant} that captures losing states at node $n$.
+\textsc{treeFormula}(k, T_2)$ and hence $s \land \textsc{treeFormula}(k, T_1)
+\land \textsc{treeFormula}(k, T_2)$ is also unsatisfiable. This enables the
+construction of an \emph{interpolant} that captures losing states at node $n$.
 
 Given two formulas $F_1$ and $F_2$ such that $F_1 \land F_2$ is unsatisfiable,
 it is possible to construct a Craig interpolant~\cite{craig1957} $\mathcal{I}$
