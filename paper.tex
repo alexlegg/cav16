@@ -614,19 +614,19 @@ controller or environment losing states respectively
             \node [circle,draw] (root){}
                 child {node [circle,draw] {}
                     child {node [circle,draw,right=5pt] {}
-                        edge from parent [fixed] node [left] {\texttt{gr0=1, gr1=0}}
+                        edge from parent [fixed] node [left,text width=1cm] {\texttt{gr0=1, gr1=0}}
                     }
                     child {node [circle,draw,left=5pt] {}
-                        edge from parent [fixed] node [right] {\texttt{gr0=1, gr1=1}}
+                        edge from parent [fixed] node [right,text width=1cm] {\texttt{gr0=1, gr1=1}}
                     }
                     node [left=5pt] {$n$}
-                    edge from parent [fixed] node [left] {\texttt{gr0=0, gr1=1}}
+                    edge from parent [fixed] node [left,text width=1cm] {\texttt{gr0=0, gr1=1}}
                 }
                 child {node [circle,draw] (n) {}
                     child {node [circle,draw] {}
-                        edge from parent [fixed] node [right] {\texttt{gr0=1, gr1=1}}
+                        edge from parent [fixed] node [right,text width=1cm] {\texttt{gr0=1, gr1=1}}
                     }
-                    edge from parent [fixed] node [right] {\texttt{gr0=1, gr1=1}}
+                    edge from parent [fixed] node [right,text width=1cm] {\texttt{gr0=1, gr1=1}}
                 }
                 node [above=4pt] {$\langle s, k \rangle$};
         \end{tikzpicture}
@@ -639,13 +639,13 @@ controller or environment losing states respectively
             \node [circle,draw] (root){}
                 child {node [circle,draw] {}
                     node [left=5pt] {$n$}
-                    edge from parent [fixed] node [left] {\texttt{gr0=1, gr1=0}}
+                    edge from parent [fixed] node [left,text width=1cm] {\texttt{gr0=1, gr1=0}}
                 }
                 child {node [circle,draw] (n) {}
                     child {node [circle,draw] {}
-                        edge from parent [fixed] node [right] {\texttt{gr0=1, gr1=1}}
+                        edge from parent [fixed] node [right,text width=1cm] {\texttt{gr0=1, gr1=1}}
                     }
-                    edge from parent [fixed] node [right] {\texttt{gr0=1, gr1=1}}
+                    edge from parent [fixed] node [right,text width=1cm] {\texttt{gr0=1, gr1=1}}
                 }
                 node [above=4pt] {$\langle s, k \rangle$};
         \end{tikzpicture}
@@ -657,10 +657,10 @@ controller or environment losing states respectively
         \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
             \node [circle,draw] {}
                 child {node [circle,draw,right=5pt] {}
-                    edge from parent [fixed] node [left] {\texttt{gr0=1, gr1=0}}
+                    edge from parent [fixed] node [left,text width=1cm] {\texttt{gr0=1, gr1=0}}
                 }
                 child {node [circle,draw,left=5pt] {}
-                    edge from parent [fixed] node [right] {\texttt{gr0=1, gr1=1}}
+                    edge from parent [fixed] node [right,text width=1cm] {\texttt{gr0=1, gr1=1}}
                 }
                 node [left=5pt] {$n$};
         \end{tikzpicture}
@@ -668,6 +668,7 @@ controller or environment losing states respectively
         \label{fig:treef2}
     \end{subfigure}
     \caption{Splitting of an abstract game tree by the learning procedure.}
+    \label{fig:interpolanttrees}
 \end{figure}
 
 \begin{algorithm}[t]
@@ -714,13 +715,13 @@ controller or environment losing states respectively
     \label{alg:learn}
 \end{algorithm}
 
-Consider the game tree $T$ in
-Figure~\ref{fig:interpolatetree}, whose edges are labelled with controller
-actions.  There does not exist a partial strategy for the environment that is
-winning against the controller actions in this tree since any requests will
-always be granted. Thus the \textsc{findCandidate} function can not find a
-candidate strategy. We now learn the states for which these controller actions
-can force the game to stay in the controller winning set.
+Consider the game tree $T$ in Figure~\ref{fig:interpolatetree} from our running
+example.  This tree is labelled with controller actions that prevent the
+environment from forcing the game into the error state. No matter how many
+requests the environment makes, the controller will grant a surplus. So the
+\textsc{findCandidate} function can not find a candidate strategy for the
+environment.  We now learn the states for which these controller actions can
+force the game to stay in the controller winning set.
 
 We choose a non-leaf node $n$ of $T$ with maximal depth, i.e., a node whose
 children are leafs (Algorithm~\ref{alg:learn}, line~3). We then split the tree
@@ -728,11 +729,14 @@ at $n$ such that both slices $T_1$ and $T_2$ contain a copy of $n$ (line~4).
 Figure~\ref{fig:treef1} shows $T_1$, which contains all of $T$ except $n$'s
 children, and $T_2$ (Figure~\ref{fig:treef2}), which contains only $n$ and its
 children.  There is no candidate strategy for $T$ so $s \land
-\textsc{treeFormula}(k, T)$ is unsatisfiable.  By construction,
-$\textsc{treeFormula}(k, T) \equiv \textsc{treeFormula}(k, T_1) \land
-\textsc{treeFormula}(k, T_2)$ and hence $s \land \textsc{treeFormula}(k, T_1)
-\land \textsc{treeFormula}(k, T_2)$ is also unsatisfiable. This enables the
-construction of an \emph{interpolant} that captures losing states at node $n$.
+\textsc{\textoverline{treeFormula}}(k, T)$ is unsatisfiable.  By construction,
+$\textsc{\textoverline{treeFormula}}(k, T) \equiv
+\textsc{\textoverline{treeFormula}}(k, T_1) \land
+\textsc{\textoverline{treeFormula}}(k, T_2)$ and hence $s \land
+\textsc{\textoverline{treeFormula}}(k, T_1) \land
+\textsc{\textoverline{treeFormula}}(k, T_2)$ is also unsatisfiable. This enables
+the construction of an \emph{interpolant} that captures losing states at node
+$n$.
 
 Given two formulas $F_1$ and $F_2$ such that $F_1 \land F_2$ is unsatisfiable,
 it is possible to construct a Craig interpolant~\cite{craig1957} $\mathcal{I}$
@@ -747,33 +751,37 @@ and $F_2$ are the state variable copies belonging to node $n$. By the properties
 $F_2 \land \mathcal{I}$ is unsatisfiable, therefore all states in $\mathcal{I}$
 are losing against abstract game tree $T_2$ in Figure~\ref{fig:treef2}.  We also know that $F_1 \to
 \mathcal{I}$, thus $\mathcal{I}$ contains all states reachable at $n$ by
-following $T_1$ and avoiding error states.
+following $T_1$ and avoiding error states. For example, in the pictured trees
+the set $nrequests = 0$ is reachable at $n$ and no move the environment chooses
+will reach the error state in one round from this set.
 
-We have discovered a set $\mathcal{I}$ of states losing for the controller. We
-record these newly discovered states in a set $B^M$ of ``bad'' states that
-\emph{must} be losing for the controller (Algorithm~\ref{alg:learn}, line~6).
-This set is initialised to the error set $E$ and grows as new losing states are
-discovered.  The \textsc{treeFormula} function is modified for the unbounded
-solver (Algorithm~\ref{alg:unboundedTreeFormula}) to replace $E$ with $B^M$.
-This enables further interpolants to be constructed by the learning procedure
-recursively splitting more nodes from $T_1$ (Algorithm~\ref{alg:learn}, line~7)
-since the states that are losing to $T_2$ are now blocked by $B^M$.
+We have discovered a set $\mathcal{I}$ of states losing for the environment.
+Environment-losing states are only losing for a particular bound: given that
+there does not exist an environment strategy that forces the game into an error
+state in $k$ rounds or less; there may still exist a longer environment-winning
+strategy.  We therefore record learned environment-losing states along with
+associated bounds.  To this end, we maintain a conceptually infinite array of
+sets $B^m[k]$ that are may-losing for the controller, indexed by bound $k$.
+$B^m[k]$ are initialised to $\top$ for all $k$.  Whenever an environment-losing
+set $\mathcal{I}$ is discovered for a node $n$ with bound $\textsc{height}(k,
+n)$ in line~13 of Algorithm~\ref{alg:learn}, this set is subtracted from
+$B^m[i]$, for all $i$ less than or equal to the bound (lines~14--16).
 
-\begin{algorithm}[t]
-    \caption{Amended tree formulas for Controller and Environment}
-    \label{alg:unboundedTreeFormula}
-    \begin{algorithmic}[1]
-        \Function{treeFormula}{$k, T$}
-        \If{$\Call{height}{k, T} = 0$}
-        \State \Return{ $\lnot \Call{$B^M$}{X_{T}}$ }
-        \Else
-        \State \Return{$\lnot \Call{$B^M$}{X_{T}} \land$ \\
-            $$\bigwedge_{\langle e, n \rangle \in \Call{succ}{T}}(\Call{$\delta$}{X_T, U_e, C_n, X_n} \land U_e = \Call{action}{e} \land \Call{treeFormula}{k, n})$$
-        }
-        \EndIf
-        \EndFunction
-        \algstore{tf1}
-    \end{algorithmic}
+The \textsc{\textoverline{treeFormula}} function is modified for the unbounded
+solver (Algorithm~\ref{alg:unboundedTreeFormula}) to constrain the environment
+to the appropriate $B^m$. This enables further interpolants to be constructed
+by the learning procedure recursively splitting more nodes from $T_1$
+(Algorithm~\ref{alg:learn}, line~7) since the states that are losing to $T_2$
+are no longer contained in $B^m$.
+
+\begin{algorithm}[t] \caption{Amended tree formulas for Controller and
+    Environment} \label{alg:unboundedTreeFormula} \begin{algorithmic}[1]
+        \Function{treeFormula}{$k, T$} \If{$\Call{height}{k, T} = 0$} \State
+        \Return{ $\lnot \Call{$B^M$}{X_{T}}$ } \Else \State \Return{$\lnot
+            \Call{$B^M$}{X_{T}} \land$ \\ $$\bigwedge_{\langle e, n \rangle \in
+            \Call{succ}{T}}(\Call{$\delta$}{X_T, U_e, C_n, X_n} \land U_e =
+            \Call{action}{e} \land \Call{treeFormula}{k, n})$$ } \EndIf
+        \EndFunction \algstore{tf1} \end{algorithmic}
 
     \begin{algorithmic}[1]
         \algrestore{tf1}
@@ -788,39 +796,14 @@ since the states that are losing to $T_2$ are now blocked by $B^M$.
     \end{algorithmic}
 \end{algorithm}
 
-Learning of states losing for the environment is similar (\textsc{\textoverline{learn}} in Algorithm~\ref{alg:learn}). 
-The main difference is that environment-losing states are only losing for a particular
-bound: given that there does not exist an environment strategy that
-forces the game into an error state in $k$ rounds or less; there may still exist a longer
-environment-winning strategy.  We therefore record learned environment-losing states
-along with associated bounds.  To this end, we maintain a conceptually infinite array of
-sets $B^m[k]$ that are may-losing for the controller, indexed by bound $k$.  $B^m[k]$ 
-are initialised to $\top$ for all $k$.  Whenever an environment-losing set $\mathcal{I}$
-is discovered for a node $n$ with bound $\textsc{height}(k, n)$ in line~13 of Algorithm~\ref{alg:learn}, this set is subtracted from 
-$B^m[i]$, for all $i$ less than or equal to the bound (lines~14--16).
-
-%It is more complicated to learn states from environment-losing abstract game
-%trees. 
-%States are only losing for the environment for a particular bound. For a
-%state learned at a node $n$ it is losing at $\textsc{bound}(n)$. Therefore we
-%maintain an array of state sets indexed by the bound at which that set of
-%states is losing for the environment. Instead of accumulating states, as we do
-%in $B^M$, we instead remove states from the array $B^m$. This array is
-%initialised with $\top$ and contains only states that \emph{may} lose for the
-%controller. 
-The modified \textsc{\textoverline{treeFormula}} function (Algorithm~\ref{alg:unboundedTreeFormula})
-constrains the environment to may-losing states, which also allows for
-recursive learning over the entire tree.
-
-%We compile interpolants into DNF cubes by constructing a temporary BDD. This
-%smaller representation is necessary for maintaining the size of formulas passed
-%to the SAT solver. However, it can occasionally lead to state explosion.
-
-%The recursive learning algorithms, \textsc{learn} (for the controller) and
-%\textsc{\textoverline{learn}} (for the environment), are detailed in
-%Algorithm~\ref{alg:learn}. When executing \textsc{findCandidate} in the
-%unbounded solver, lines 19 and 20 become active and call into the learning
-%procedures. 
+Learning of states losing from the controller is similar (\textsc{learn} in
+Algorithm~\ref{alg:learn}). The main difference is that environment-losing
+states are losing for all bounds. Therefore we record these states in a single
+set $B^M$ of must-losing states (Algorithm~\ref{alg:learn}, line~6).  This set
+is initialised to the error set $E$ and grows as new losing states are
+discovered.  The modified \textsc{\textoverline{treeFormula}} function
+(Algorithm~\ref{alg:unboundedTreeFormula}) blocks must-losing states, which
+also allows for recursive learning over the entire tree.
 
 \subsection{Main synthesis loop}
 
