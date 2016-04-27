@@ -11,6 +11,10 @@
 \usetikzlibrary{positioning}
 \usetikzlibrary{plotmarks}
 
+\let\proof\relax
+\let\endproof\relax
+\usepackage{amsthm}
+
 \algnewcommand{\IIf}[1]{\State\algorithmicif\ #1\ \algorithmicthen}
 \algnewcommand{\EndIIf}{}
 \algnewcommand{\IfElse}[3]{\algorithmicif\ #1\ \algorithmicthen\ #2\ \algorithmicelse\ #3}
@@ -20,6 +24,8 @@
 \newcommand{\False}{\texttt{false}}
 \newcommand{\II}{\mathcal{I}}
 \newcommand{\textoverline}[1]{$\overline{\mbox{#1}}$}
+
+\newtheorem*{exmp}{Example}
 
 \pagestyle{headings}
 
@@ -181,13 +187,26 @@ We review the bounded synthesis algorithm by Narodytska et
 al.~\cite{narodytska2014}, which is the main building block for our unbounded
 algorithm.
 
-First, we introduce a running example to assist the explanation. We consider a
+\begin{exmp}
+We introduce a running example to assist the explanation. We consider a
 simple arbiter system in which the environment requests for either 1 or 2
-resources, and the controller may grant access to two resources. The controller
-must ensure that the number of unhandled requests is not $\geq 3$.
-Figure~\ref{fig:example} shows the variables (\ref{fig:examplevars}) and the
-formulas for computing next-state variables (\ref{fig:exampletrans}) for this
-example.
+resources, and the controller may grant access to two resources. The total
+number of requests grows each round by the number of environment requests and
+shrinks by the number of resources granted by the controller in the previous
+round.  The controller must ensure that the number of unhandled requests does
+not accumulate to more than 2.  Figure~\ref{fig:example} shows the variables
+(\ref{fig:examplevars}) and the formulas for computing next-state variables
+(\ref{fig:exampletrans}) for this example. We use primed identifiers to denote
+next-state variables and curly braces to define the domain of a variable.
+
+This example is the $n=2$ instance of the more general problem of an arbiter of
+$n$ resources. The set of winning states grows exponentially with the number of
+resources the controller could use to grant requests, which makes the problem
+hard for BDD solvers. This example illustrates the strength of the approach
+presented here, which does not need to enumerate all winning states as will be
+shown in Section~3.
+
+\end{exmp}
 
 \begin{figure}
     \begin{subfigure}[t]{\textwidth}
@@ -195,12 +214,19 @@ example.
         \begin{tabular}{l | l | l}
             \textbf{Controllable} & \textbf{Uncontrollable} & \textbf{State} \\
             \hline
-            \texttt{request = \{1, 2\}} & \texttt{grant0 = \{0, 1\}} & \texttt{resource0 = \{0, 1\}} \\
-            & \texttt{grant1 = \{0, 1\}} & \texttt{resource1 = \{0, 1\}} \\
-            & & \texttt{nrequests = \{0, 1, 2, 3\}} \\
+            \texttt{request : \{1, 2\}} & \texttt{grant0 = \{0, 1\}} & \texttt{resource0 = \{0, 1\}} \\
+            & \texttt{grant1 : \{0, 1\}} & \texttt{resource1 = \{0, 1\}} \\
+            & & \texttt{nrequests : \{0, 1, 2, 3\}} \\
         \end{tabular}
         \caption{Variables}
         \label{fig:examplevars}
+    \end{subfigure}
+
+    \begin{subfigure}[t]{\textwidth}
+        \centering
+        \texttt{resource0 = 0; resource1 = 0; nrequests = 0;}
+        \caption{Initial State}
+        \label{fig:exampleinit}
     \end{subfigure}
 
     \begin{subfigure}[t]{\textwidth}
@@ -446,9 +472,13 @@ If the dual solver can find no spoiling strategy at any of the leaves, then the
 candidate partial strategy is a winning one. Otherwise, \textsc{verify} returns
 the move used by the opponent to defeat a leaf of the partial strategy, which
 is appended to the corresponding node in $T$ in order to refine it in line~(9).
-In our example, the controller's partial strategy in Figure~\ref{fig:strategy}
-is defeated by the counterexample action \texttt{req=2}.
-Figure~\ref{fig:refined} shows a refined AGT that includes this action.
+
+\begin{exmp}
+    The controller's partial strategy in
+    Figure~\ref{fig:strategy} is defeated by the counterexample action
+    \texttt{req=2}.  Figure~\ref{fig:refined} shows a refined AGT that includes
+    this action.
+\end{exmp}
 
 We solve the refined game by recursively invoking \textsc{solveAbstract} on it.
 If no partial winning strategy is found for the refined game then there is also
