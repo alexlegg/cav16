@@ -262,9 +262,9 @@ an example abstract game tree restricting the environment (abstract game trees
 restricting the controller are similar).  In the abstract game, the controller
 can freely choose actions whilst the environment is required to pick actions
 from the tree.  After reaching a leaf, the enivironment continues playing
-unrestricted.  The tree in Figure~\ref{fig:agt} restricts the first and second
-environment actions to \texttt{request=1}. It then reaches a leaf of the tree
-and continues playing unrestricted. 
+unrestricted.  The tree in Figure~\ref{fig:agt} restricts the first environment
+action to \texttt{request=1}. At the leaf of the tree the game continues
+unrestricted.
 
 The root of the tree is annotated by the initial state $s$ of the abstract game
 and the bound $k$ on the number of rounds.  We denote $\textsc{nodes}(T)$ the
@@ -280,7 +280,7 @@ edge connecting $n$ and $n'$.
 \tikzstyle{fixed}=[solid]
 \begin{figure}
     \centering
-    \begin{subfigure}[t]{.25\textwidth}
+    \begin{subfigure}[t]{.2\textwidth}
         \centering
         \begin{tikzpicture}[level distance = 5mm]
             \node [circle,draw,inner sep=1pt] (root){}
@@ -320,7 +320,7 @@ edge connecting $n$ and $n'$.
         \caption{AGT}
         \label{fig:agt}
     \end{subfigure}
-    \begin{subfigure}[t]{.25\textwidth}
+    \begin{subfigure}[t]{.2\textwidth}
         \centering
         \begin{tikzpicture}[level distance = 5mm]
             \node [circle,draw,inner sep=1pt] (root){}
@@ -369,7 +369,7 @@ edge connecting $n$ and $n'$.
         \caption{AGT}
         \label{fig:agt2}
     \end{subfigure}
-    \begin{subfigure}[t]{.25\textwidth}
+    \begin{subfigure}[t]{.3\textwidth}
         \centering
         \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
             \node [circle,draw] (root){}
@@ -379,13 +379,13 @@ edge connecting $n$ and $n'$.
                             edge from parent [fixed] node [left] {\texttt{req=1}}
                         }
                         child {node [circle,draw] {}
-                            edge from parent [fixed] node [right] {\texttt{req=2}}
+                            edge from parent [fixed] node [below left=0pt and -5pt] {\texttt{req=2}}
                         }
                         edge from parent [fixed] node [left] {\texttt{req=1}}
                     }
                     child {node [circle,draw] {}
                         child {node [circle,draw] {}
-                            edge from parent [fixed] node [right] {\texttt{req=2}}
+                            edge from parent [fixed] node [above left=-3pt and 0pt] {\texttt{req=2}}
                         }
                         edge from parent [fixed] node [right] {\texttt{req=2}}
                     }
@@ -426,15 +426,15 @@ to the leaf.
 \begin{exmp}
 
     To solve our example, the algorithm begins by invoking a SAT solver to find
-    a trace of length $k$ from the initial state to the error state (see
-    Figure~\ref{fig:trace}). This trace is used to create an abstract game tree
-    by taking the first action in the trace and fixing it as the first action
-    in the game tree (Figure~\ref{fig:agt}).  This abstract game tree
-    represents the conjecture that \texttt{req=1} may be a good first action.
-    Next the solver attempts to find a counterexample to this conjecture by
-    finding a trace that avoids the error state with the first environment
-    action fixed to \texttt{req=1} (Figure~\ref{fig:trace2}), i.e.  by playing
-    the abstract game on behalf of the controller.
+    a trace of length $k$ (here we consider $k=3$) from the initial state to
+    the error state (see Figure~\ref{fig:trace}). This trace is used to create
+    an abstract game tree by taking the first action in the trace and fixing it
+    as the first action in the game tree (Figure~\ref{fig:agt}).  This abstract
+    game tree represents the conjecture that \texttt{req=1} may be a good first
+    action.  Next the solver attempts to find a counterexample to this
+    conjecture by finding a trace that avoids the error state with the first
+    environment action fixed to \texttt{req=1} (Figure~\ref{fig:trace2}), i.e.
+    by playing the abstract game on behalf of the controller.
     
     Observe that the controller chooses to grant only one resource, just enough
     to ensure that an error state will not be reached. This example will show
@@ -456,9 +456,10 @@ to the leaf.
 
 The bounded synthesis algorithm solves abstract game trees by invoking a SAT
 solver to search for candidate partial strategies. Candidate strategies are
-checked by a call to the opponent solver, which also refines the abstract game
-tree. The refinements are then solved recursively.  The full procedure is
-illustrated in Algorithm~\ref{alg:bounded}.
+used as game abstractions for the opponent and can be verified by a call to the
+opponent solver. The solver recursively refines the abstraction by finding
+counterexample strategies. The full procedure is illustrated in
+Algorithm~\ref{alg:bounded}.
 
 \begin{algorithm}[t]
     \begin{algorithmic}[1]
@@ -569,14 +570,13 @@ controller) or $\textsc{\textoverline{treeFormula}}$ (for the environment) in
 Algorithm~\ref{alg:treeFormula}.
 
 The tree is first extended to the maximum bound with edges that are labeled
-with arbitrary opponent actions (Algorithm~\ref{alg:bounded}, line 14) as shown
-in Figure~\ref{fig:extended}.  For each node in the tree, new SAT variables are
-introduced corresponding to the state ($X_T$) and action ($U_T$ or $C_T$)
-variables of that node. Additional variables for the opponent actions in the
-edges of $T$ are introduced ($U_e$ or $C_e$) and set to $\textsc{action}(e)$.
-The state and action variables of node $n$ are connected to successor nodes
-$\textsc{succ}(n)$ by an encoding of the transition relation and constrained to
-the winning condition of the player.
+with arbitrary opponent actions (Algorithm~\ref{alg:bounded}, line 14).  For
+each node in the tree, new SAT variables are introduced corresponding to the
+state ($X_T$) and action ($U_T$ or $C_T$) variables of that node. Additional
+variables for the opponent actions in the edges of $T$ are introduced ($U_e$ or
+$C_e$) and set to $\textsc{action}(e)$.  The state and action variables of node
+$n$ are connected to successor nodes $\textsc{succ}(n)$ by an encoding of the
+transition relation and constrained to the winning condition of the player.
 
 %%%Then copies of state and action variables are introduced for each node in the
 %%%tree and opponent action variables for each edge $e$ are set to
