@@ -1225,9 +1225,9 @@ Synthesis of safety games is a thoroughly explored area of research with most
 efforts directed toward solving games with BDDs \cite{burch1990} and abstract
 interpretation \cite{walker2014,brenguier2014}. Satisfiability solving has been used
 previously for synthesis in a suite of methods proposed by Bloem et al.
-\cite{bloem2014}. The authors propose employing competing SAT solvers
-to learn clauses, which is similar to our approach but does not unroll the
-game. They also suggest QBF solver, template-based, and Effectively
+\cite{bloem2014}. The authors propose employing competing SAT solvers to learn
+clauses representing bad states, which is similar to our approach but does not
+unroll the game.  They also suggest QBF solver, template-based, and Effectively
 Propositional Logic (EPR) approaches.
 
 SAT-based bounded model checking approaches that unroll the transition relation
@@ -1236,13 +1236,18 @@ have been extended to unbounded by using conflicts in the solver
 are no corresponding adaptations to synthesis.
 
 Incremental induction \cite{bradley2011} is another technique for unbounded
-model checking with an equivalent synthesis method \cite{morgenstern2013},
-which computes sets of states that overapproximate the losing states (similar
-to our $B^m$) and another set of winning states (similar to the negation of
-$B^M$). Their algorithm maintains a similar invariant over the sets of losing
-states as our approach and has the same termination condition. It differs in
-how the sets are computed, which it does by inductively proving the number of
-game rounds required by the environment to win from the initial state.
+model checking that inspired several approaches to synthesis including the work
+presented here.  Morgenstern et al.~\cite{morgenstern2013} proposed an
+technique that computes sets of states that overapproximate the losing states
+(similar to our $B^m$) and another set of winning states (similar to the
+negation of $B^M$).  Their algorithm maintains a similar invariant over the
+sets of losing states as our approach and has the same termination condition.
+It differs in how the sets are computed, which it does by inductively proving
+the number of game rounds required by the environment to win from a state.
+Chiang and Jiang~\cite{Chiang2015} recently proposed a similar approach that
+focusses on computing the winning region for the controller forwards from the
+initial state in order to take advantage of reachability information and bad
+transition learning without needing to discard learnt clauses.
 
 There are different approaches to bounded synthesis than the one described
 here. The authors of \cite{finkbeiner2013} suggest a methodology directly
