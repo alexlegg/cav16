@@ -952,11 +952,20 @@ $B^m[i]$. We call this operation $Upre$, the uncontrollable predecessor. So the
 The \emph{must-invariant} guarantees that the must-losing set $B^M$ is an
 underapproximation of the actual losing set $B$: $$B^M \subseteq B.$$
 
-Both invariants trivially hold after $B^m$ and $B^M$ have been initialised in the
-beginning of the algorithm.
-The sets $B^m$ and $B^M$ are only modified by the functions \textsc{learn} and
-\textoverline{\textsc{learn}}.  Below we prove that \textoverline{\textsc{learn}} 
-maintains the invariants.  The proof of \textsc{learn} is similar.
+Correctness of $\textsc{solveUnbounded}$ follows from these invariants. The
+must-invariant guarantees that the environment can force the game into an error
+state from $B^M$, therefore checking whether the initial state is in $B^M$ (as
+in line~5) is sufficient to return \texttt{unrealisable}. The may-invariant
+tells us that if $B^m[i] \equiv B^m[i+1]$ (line~6) then $Upre(B^m[i+1])
+\subseteq B^m[i+1]$, i.e. there is a fixed point in the uncontrollable
+predecessor. This guarantees that the controller can force the game to stay
+within $B^m[i+1]$ and avoid error states indefinitely.
+
+Both invariants trivially hold after $B^m$ and $B^M$ have been initialised in
+the beginning of the algorithm. The sets $B^m$ and $B^M$ are only modified by
+the functions \textsc{learn} and \textoverline{\textsc{learn}}.  Below we prove
+that \textoverline{\textsc{learn}} maintains the invariants.  The proof of
+\textsc{learn} is similar.
 
 \subsection{Proof of \textoverline{\textsc{learn}}}
 
