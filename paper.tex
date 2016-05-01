@@ -1119,9 +1119,9 @@ instance.
 \end{table}
 
 Our implementation was able to solve 103 out of the 250 specification in the
-alloted time, including 12 instances that were not solved by any other
-solver in SYNTCOMP'15. The unique instances we solved are listed in
-Table~\ref{tab:unique}.
+alloted time, including 12 instances that were not solved by any other solver
+in the sequential track of the competition. The unique instances we solved are
+listed in Table~\ref{tab:unique}.
 
 \begin{table}[h]
     \centering
@@ -1197,8 +1197,9 @@ techniques. For this reason our solver would be a worthwhile addition to a
 portfolio solver. In the parallel track of the competition, \textsc{Demiurge}
 uses a suite of 3 separate but communicating solvers. The solvers
 relay unsafe states to one another, which is compatible with the set $B^M$ in
-our solver. It remains future work to explore the possibility of combining
-these solvers.
+our solver. This technique can already solve each of the unique instances
+solved by our solver but there may still be value in the addition of this work
+to the portfolio.  It remains future work to explore this possibility.
 
 \section{Related Work}
 
