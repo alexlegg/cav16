@@ -276,9 +276,11 @@ edge connecting $n$ and $n'$.
 \tikzstyle{fixed}=[solid]
 \begin{figure}
     \centering
+    \captionsetup[subfigure]{width=\textwidth,justification=raggedleft}
     \begin{subfigure}[t]{.2\textwidth}
         \centering
-        \begin{tikzpicture}[level distance = 5mm]
+        \begin{minipage}[t][3.8cm][t]{\textwidth}
+        \begin{tikzpicture}[level distance = 5mm,baseline]
             \node [circle,draw,inner sep=1pt] (root){}
                 child {node [circle,draw,inner sep=1pt] {}
                     child {node [circle,draw,inner sep=1pt] {}
@@ -298,13 +300,14 @@ edge connecting $n$ and $n'$.
                 node [left=4pt] {\texttt{req=1}}
                 node [above=4pt] {$\langle s, 3 \rangle$};
         \end{tikzpicture}
-        \captionsetup{width=.8\textwidth}
-        \caption{Environment-winning trace}
+    \end{minipage}
+        \caption{Environment winning trace}
         \label{fig:trace}
     \end{subfigure}
     \begin{subfigure}[t]{.15\textwidth}
         \centering
-        \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
+        \begin{minipage}[t][3.8cm][t]{\textwidth}
+        \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm,baseline]
             \node [circle,draw] (root){}
                 child {node [circle,draw] {}
                     edge from parent [fixed] node [left] {\texttt{req=1}}
@@ -312,13 +315,14 @@ edge connecting $n$ and $n'$.
                 node [left=4pt] {}
                 node [above=4pt] {$\langle s, 3 \rangle$};
         \end{tikzpicture}
-        \captionsetup{width=.8\textwidth}
+        \end{minipage}
         \caption{AGT}
         \label{fig:agt}
     \end{subfigure}
     \begin{subfigure}[t]{.2\textwidth}
         \centering
-        \begin{tikzpicture}[level distance = 5mm]
+        \begin{minipage}[t][3.8cm][t]{\textwidth}
+        \begin{tikzpicture}[level distance = 5mm,baseline]
             \node [circle,draw,inner sep=1pt] (root){}
                 child {node [circle,draw,inner sep=1pt] {}
                     child {node [circle,draw,inner sep=1pt] {}
@@ -338,13 +342,14 @@ edge connecting $n$ and $n'$.
                 node [left=4pt] {\texttt{req=1}}
                 node [above=4pt] {$\langle s, 3 \rangle$};
         \end{tikzpicture}
-        \captionsetup{width=.8\textwidth}
-        \caption{Controller-winning trace}
+        \end{minipage}
+        \caption{Controller winning trace}
         \label{fig:trace2}
     \end{subfigure}
     \begin{subfigure}[t]{.15\textwidth}
         \centering
-        \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
+        \begin{minipage}[t][3.8cm][t]{\textwidth}
+        \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm,baseline]
             \node [circle,draw] (root){}
                 child {node [circle,draw] {}
                     child {node [circle,draw] {}
@@ -361,13 +366,14 @@ edge connecting $n$ and $n'$.
                 node [left=4pt] {}
                 node [above=4pt] {$\langle s, 3 \rangle$};
         \end{tikzpicture}
-        \captionsetup{width=.8\textwidth}
+        \end{minipage}
         \caption{AGT}
         \label{fig:agt2}
     \end{subfigure}
     \begin{subfigure}[t]{.2\textwidth}
         \centering
-        \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm]
+        \begin{minipage}[t][3.8cm][t]{\textwidth}
+        \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm,baseline]
             \node [circle,draw] (root){}
                 child {node [circle,draw] {}
                     child {node [circle,draw] {}
@@ -389,10 +395,10 @@ edge connecting $n$ and $n'$.
                 }
                 node [above=4pt] {$\langle s, 3 \rangle$};
         \end{tikzpicture}
-        \captionsetup{width=.8\textwidth}
+        \end{minipage}
         \caption{Refined AGT}
         \label{fig:refined}
-    \end{subfigure}%
+    \end{subfigure}
     \caption{Abstract game trees.}
     \label{fig:alltrees}
 \end{figure}
