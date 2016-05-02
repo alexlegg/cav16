@@ -1168,18 +1168,24 @@ able to run \textsc{Demiurge} on our hardware but show competition results for
         \node[rotate=90, above left=1cm and 0.7cm] at (y axis mid) {Instances solved};
         
         %Plots
-        \draw plot[mark=x, mark options={fill=white}] file {bench_termite.dat};
-        \draw plot[mark=+, mark options={fill=white}] file {bench_demiurge.dat};
-        \draw plot[mark=triangle, mark options={fill=white}] file {bench_simple.dat};
+        \draw plot[mark=o, mark size=1pt, mark options={fill=white,color=red}] file {bench_termite.dat};
+        \draw plot[mark=+, mark options={fill=white,color=blue}] file {bench_demiurge.dat};
+        \draw plot[mark=triangle, mark options={fill=white}] file {bench_simple2.dat};
+        \draw plot[mark=x, mark options={fill=white,color=green}] file {bench_abs1.dat};
+%%%        \draw plot[mark=x, mark options={fill=white,color=green}] file {bench_abs2.dat};
+%%%        \draw plot[mark=x, mark options={fill=white,color=green}] file {bench_abs3.dat};
 
         \begin{scope}[shift={(30,20)}] 
             \draw (0,0) -- 
-                plot[mark=x, mark options={fill=white}] (0.25,0) -- (0.5,0) 
+                plot[mark=o, mark size=1pt, mark options={fill=white,color=red}] (0.25,0) -- (0.5,0) 
                 node[right]{Unbounded synthesis};
             \draw[yshift=\baselineskip] (0,0) -- 
-                plot[mark=+, mark options={fill=white}] (0.25,0) -- (0.5,0)
-                node[right]{Demiurge};
+                plot[mark=x, mark options={fill=white,color=green}] (0.25,0) -- (0.5,0)
+                node[right]{AbsSynthe (seq2)};
             \draw[yshift=2\baselineskip] (0,0) -- 
+                plot[mark=+, mark options={fill=white,color=blue}] (0.25,0) -- (0.5,0)
+                node[right]{Demiurge};
+            \draw[yshift=3\baselineskip] (0,0) -- 
                 plot[mark=triangle, mark options={fill=white}] (0.25,0) -- (0.5,0)
                 node[right]{Simple BDD Solver 2};
         \end{scope}
