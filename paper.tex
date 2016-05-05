@@ -133,11 +133,12 @@ former to guide the search, while we rely on the latter to ensure convergence.
 
 We evaluate our method on the benchmarks of the 2015 synthesis competition
 (SYNTCOMP'15).  While our solver solves fewer total instances than competitors,
-it solves the largest number of unique instances, i.e., instances that could not be solved by 
-any other solver.  These results confirm that there exist classes of problems that are
-hard for traditional synthesis techniques, but can be efficiently solved by our
-method.  While further performance improvements are clearly needs, in its
-current state the method may be a worthwhile addition to a portfolio solver.
+it solves the largest number of unique instances for a sequential solver, i.e.,
+instances that could not be solved by any other solver.  These results confirm
+that there exist classes of problems that are hard for traditional synthesis
+techniques, but can be efficiently solved by our method.  While further
+performance improvements are clearly needed, in its current state the method
+may be a worthwhile addition to a portfolio solver.
 %%%While further performance improvements are clearly needed, in its current state the method 
 %%%can be used in a portfolio solver to increase the number of tractable instances.
 
@@ -813,13 +814,8 @@ controller or environment losing states respectively
     that an interpolant can approximate the losing states in such a way that
     there is just enough information to prove realisability. It is also cheap
     to compute an interpolant using a SAT solver.
-
-    At node $n$, the interpolant $\texttt{nrequests} = 1 \land
-    \texttt{resource1} = 1$ captures the information we need. Any action by the
-    environment followed by one of the controller actions at $n$ will be
-    winning for the controller.
-
 \end{exmpInt}
+
 
 Given two formulas $F_1$ and $F_2$ such that $F_1 \land F_2$ is unsatisfiable,
 it is possible to construct a Craig interpolant~\cite{craig1957} $\mathcal{I}$
@@ -853,6 +849,15 @@ abstract game tree $T_2$ in Figure~\ref{fig:treef2}.  We also know that $F_1
 \to \mathcal{I}$, thus $\mathcal{I}$ contains all states reachable at $n$ by
 following $T_1$ and avoiding error states. 
 
+\begin {exmp}
+
+    At node $n$, the interpolant $\texttt{nrequests} = 1 \land
+    \texttt{resource1} = 1$ captures the information we need. Any action by the
+    environment followed by one of the controller actions at $n$ will be
+    winning for the controller.
+
+\end{exmp}
+
 We have discovered a set $\mathcal{I}$ of states losing for the environment.
 Environment-losing states are only losing for a particular bound: given that
 there does not exist an environment strategy that forces the game into an error
@@ -860,7 +865,7 @@ state in $k$ rounds or less; there may still exist a longer environment-winning
 strategy.  We therefore record learned environment-losing states along with
 associated bounds.  To this end, we maintain a conceptually infinite array of
 sets $B^m[k]$ that are may-losing for the controller, indexed by bound $k$.
-$B^m[k]$ are initialised to $\top$ for all $k$.  Whenever an environment-losing
+$B^m[k]$ are initialised to $E$ for all $k$.  Whenever an environment-losing
 set $\mathcal{I}$ is discovered for a node $n$ with bound $\textsc{height}(k,
 n)$ in line~13 of Algorithm~\ref{alg:learn}, this set is subtracted from
 $B^m[i]$, for all $i$ less than or equal to the bound (lines~14--16).
@@ -1100,14 +1105,18 @@ the 2014 competition report~\cite{jacobs2015}.
 
 The implementation of our algorithm uses \textsc{Glucose}~\cite{audemard2014}
 for SAT solving and \textsc{Periplo}~\cite{rollini2013} for interpolant
-generation. The benchmarks were run on a cluster of Intel Quad Core Xeon E5405
-2GHz CPUs with 16GB of memory.  The solver was allowed exclusive access to a node
-for one hour to solve an instance.
+generation. We intend to open source the tool for SYNTCOMP'16. The benchmarks
+were run on a cluster of Intel Quad Core Xeon E5405 2GHz CPUs with 16GB of
+memory.  The solver was allowed exclusive access to a node for one hour to
+solve an instance.
 
 The results of our benchmarking are shown, along with the synthesis competition
-results~\cite{syntcompedacc}, in Table~\ref{tab:syntcomp}. The competition was run on Intel Quad
-Core 3.2Ghz CPUs with 32GB of memory, also on isolated nodes for one hour per
-instance.
+results~\cite{syntcompedacc}, in Table~\ref{tab:syntcomp}. The competition was
+run on Intel Quad Core 3.2Ghz CPUs with 32GB of memory, also on isolated nodes
+for one hour per instance. The unique column lists the number of instances that
+only that tool could solve in the competition (excluding our solver). In
+brackets is the number of instances that only that tool could solve, including
+our solver.
 
 \begin{table}
     \centering
@@ -1115,13 +1124,13 @@ instance.
     \begin{tabular}{l | r | r }
         \textbf{Solver} & \textbf{Solved} & \textbf{Unique} \\
         \hline
-        Simple BDD Solver (2) & 195 & 10 \\
+        Simple BDD Solver (2) & 195 & 10 \textit{(6)} \\
         AbsSynthe (seq2) & 187 & 2 \\
         Simple BDD Solver (1) & 185 & \\
         AbsSynthe (seq3) & 179 & \\
         Realizer (sequential) & 179 & \\
         AbsSynthe (seq1) & 173 & 1 \\
-        Demiurge (D1real) & 139 & 5 \\
+        Demiurge (D1real) & 139 & 5 \textit{(2)} \\
         Aisy & 98 & \\
         \textit{Unbounded Synthesis} & \textit{103} & \textit{12} \\
     \end{tabular}
@@ -1259,9 +1268,10 @@ The original bounded synthesis algorithm of Narodytska et
 al.~\cite{narodytska2014} solves realisability without constructing a strategy.
 In \cite{een2015} the realisability algorithm is extended with strategy
 extraction. The technique relies on interpolation over abstract game trees to
-compute the winning strategy.  In
-the present work we use interpolation in a different way in order to learn
-losing states of the game.
+compute the winning strategy.  In the present work we use interpolation in a
+different way in order to learn losing states of the game. In addition, this
+method could be easily adapted to the unbounded realisability algorithm
+presented here to generate unbounded strategies.
 
 \section{Conclusion}
 
