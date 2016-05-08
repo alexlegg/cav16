@@ -78,7 +78,8 @@ its \emph{environment}. In this work we focus on safety games, in which the
 controller must prevent the environment from forcing the game into an error
 state.
 
-The reactive synthesis problem is EXPTIME-complete so
+The reactive synthesis problem is EXPTIME-complete (when starting 
+from a symbolic representation of the game graph) so
 na\"ive algorithms are infeasible on anything but simple systems.
 % In this way the environment is equivalent to an existential search of
 %the game and the controller is universal. Much of the complexity of reactive
@@ -133,8 +134,9 @@ former to guide the search, while we rely on the latter to ensure convergence.
 
 We evaluate our method on the benchmarks of the 2015 synthesis competition
 (SYNTCOMP'15).  While our solver solves fewer total instances than competitors,
-it solves the largest number of unique instances for a sequential solver, i.e.,
-instances that could not be solved by any other solver.  These results confirm
+it solves the largest number of unique instances, i.e.,
+instances that could not be solved by any other sequential solver.  
+These results confirm
 that there exist classes of problems that are hard for traditional synthesis
 techniques, but can be efficiently solved by our method.  While further
 performance improvements are clearly needed, in its current state the method
@@ -151,7 +153,10 @@ compare our approach to other synthesis techniques.
 
 A \emph{safety game}, $G = \langle X, U, C, \delta, I, E \rangle$, is defined
 over boolean state variables $X$, uncontrollable action variables $U$, and
-controllable action variables $C$.  $I$ is the initial state of the game given
+controllable action variables $C$.  
+We use $\mathcal{X}$, $\mathcal{U}$, and $\mathcal{C}$ to denote sets of valuations of 
+variables $X$, $U$, and $C$ respectively.
+$I$ is the initial state of the game given
 as a valuation of state variables.  $E(X)$ is the set of error states
 represented by its characteristic formula.  The transition relation $\delta(X,
 U, C, X')$ of the game is a boolean formula that relates current state and
@@ -171,14 +176,15 @@ restricted to length $\kappa$, whereas unbounded games consider runs of
 infinite length.  Since we consider only deterministic games, a run is uniquely
 described by a list of assignments to $U$ and $C$.
 
-A \emph{controller strategy} $\pi^c : (2^X, 2^U) \to 2^C$ is a mapping of states and
+A \emph{controller strategy} $\pi^c : \mathcal{X} \times \mathcal{U} \to \mathcal{C}$ 
+is a mapping of states and
 uncontrollable inputs to controllable actions. A controller strategy is winning
 in a bounded game of maximum bound $\kappa$ if all runs $(x_0, u_0, \pi^c(x_0,
 u_0)), (x_1, u_1, \pi^c(x_1, u_1)) \dots$ $(x_n, u_n, \pi^c(x_n, u_n))$ are
 winning.  Bounded \emph{realisability} is the problem of determining the
 existence of such a strategy for a bounded game.
 
-An \emph{environment strategy} $\pi^e : 2^X \to 2^U$ is a mapping of states to
+An \emph{environment strategy} $\pi^e : \mathcal{X} \to \mathcal{U}$ is a mapping of states to
 uncontrollable actions. A bounded run is winning for the environment if $x_0 =
 I \land \exists i \in \{1..n\} (E(x_i))$ and an environment strategy is winning
 for a bounded game if all runs $(x_0, \pi^e(x_0), c_0), (x_1, \pi^e(x_1), c_1)
@@ -201,13 +207,14 @@ The total number of requests grows each round by the number of environment
 requests and shrinks by the number of resources granted by the controller in
 the previous round.  The controller must ensure that the number of unhandled
 requests does not accumulate to more than 2.  Figure~\ref{fig:example} shows
-the variables (\ref{fig:examplevars}) and the formulas for computing next-state
-variables (\ref{fig:exampletrans}) for this example. We use primed identifiers
+the variables (\ref{fig:examplevars}), the initial state of the system (\ref{fig:exampleinit}), 
+and the formulas for computing next-state
+variable assignments (\ref{fig:exampletrans}) for this example. We use primed identifiers
 to denote next-state variables and curly braces to define the domain of a
 variable.
 
 This example is the $n=2$ instance of the more general problem of an arbiter of
-$n$ resources. The set of winning states has no compact representation, which
+$n$ resources. For large values of $n$, the set of winning states has no compact representation, which
 makes the problem hard for BDD solvers. In Section~3 we will outline how the
 unbounded game can be solved without enumerating all winning states.
 
@@ -248,19 +255,14 @@ unbounded game can be solved without enumerating all winning states.
     \label{fig:example}
 \end{figure}
 
-
-The bounded synthesis algorithm consists of two competing solvers, one for the
-controller and one for the environment, that solve abstractions of the safety
-game. Each solver builds a candidate strategy for its corresponding player
-consisting of assignments to $2^C$ and $2^U$ respectively. 
-
-An abstraction of the game restricts actions available to one of the players.
+Our bounded synthesis algorithm constructs abstractions of the game 
+that restrict actions available to one of the players.
 Specifically, we consider abstractions represented as trees of actions,
 referred to as \emph{abstract game trees} (AGTs).  Figure~\ref{fig:agt} shows
 an example abstract game tree restricting the environment (abstract game trees
 restricting the controller are similar).  In the abstract game, the controller
 can freely choose actions whilst the environment is required to pick actions
-from the tree.  After reaching a leaf, the enivironment continues playing
+from the tree.  After reaching a leaf, the environment continues playing
 unrestricted.  The tree in Figure~\ref{fig:agt} restricts the first environment
 action to \texttt{request=1}. At the leaf of the tree the game continues
 unrestricted.
@@ -407,13 +409,16 @@ edge connecting $n$ and $n'$.
 \end{figure}
 
 Given an environment (controller) abstract game tree $T$ a \emph{partial
-strategy} $Strat: \textsc{nodes}(T) \rightarrow C$ ($Strat: \textsc{nodes}(T)
-\rightarrow U$) labels each node of the tree with the controller's
+strategy} $Strat: \textsc{nodes}(T) \rightarrow \mathcal{C}$ ($Strat: \textsc{nodes}(T)
+\rightarrow \mathcal{U}$) labels each node of the tree with the controller's
 (environment's) action to be played in that node.   Given a partial strategy
 $Strat$, we can map each leaf $l$ of the abstract game tree to $\langle
 s',i'\rangle=\textsc{outcome}(\langle s, i\rangle, Strat, l)$ obtained by
 playing all controllable and uncontrollable actions on the path from the root
-to the leaf.
+to the leaf.  An environment (controller) partial strategy is \emph{winning against $T$} 
+if all its outcomes are states that are winning for the environment (controller)
+in the concrete game.
+
 
 %%%Figure~\ref{fig:strategy} shows an example partial strategy for
 %%%the controller.  The controller responds to the requests by first granting
@@ -422,27 +427,43 @@ to the leaf.
 \begin{exmpI}
 
     %% Make it clear that this is intuition only
-
-    To solve our example, the algorithm begins by invoking a SAT solver to find
-    a trace of length $k$ (here we consider $k=3$) from the initial state to an
-    error state (see Figure~\ref{fig:trace}).  Given a trace we make an initial
-    conjecture that the first action, \texttt{req=1}, is winning for the
+    We present the intuition behind our bounded synthesis method by applying
+    its \emph{simplified version} to the running example.
+    We begin by finding 
+    a trace of length $k$ (here we consider $k=3$) that is winning for the environment, 
+    i.e., that starts from the initial state and reaches an
+    error state (see Figure~\ref{fig:trace}).  We use a SAT solver to find such a trace,
+    precisely as one would do in bounded model checking.
+    Given this trace we make an initial
+    conjecture that any trace starting with action \texttt{req=1} is winning for the
     environment. This conjecture is captured in the abstract game tree shown in
-    Figure~\ref{fig:agt}.  Next the solver attempts to find a counterexample to
-    this conjecture by finding a trace that avoids the error states with the
-    first environment action fixed to \texttt{req=1}, i.e. by playing the
-    abstract game on behalf of the controller.  
+    Figure~\ref{fig:agt}.  We validate this conjecture by searching for a counterexample
+    trace that avoids the error state with the
+    first environment action fixed to \texttt{req=1}.   
+    Such a trace, that refutes the conjecture, is shown in Figure~\ref{fig:trace2}. 
+    In this trace, the controller wins by responding with \texttt{gr0=1, gr1=1} in the first round.
+    This move represents controller's partial strategy against the 
+    abstract game tree in Figure~\ref{fig:agt}.  This partial strategy is shown in Figure~\ref{}.
     
-    The resulting trace is shown in Figure~\ref{fig:trace2}. The environment's
-    candidate is refined using this trace and Figure~\ref{fig:agt2} shows the
-    refined game tree.  The controller's counterexample was to grant two
+    Next we strengthen the abstract game tree taking this partial strategy into account.
+    To this end we again use a SAT solver to find a trace where the environment wins while
+    the controller plays according to the partial strategy.  In the resulting trace (now shown), 
+    the environment plays \texttt{req=2} in the second round.  We refine the abstract game tree
+    using this move as shown in Figure~\ref{fig:agt2}.  The controller's partial strategy was to grant two
     resources in the first round, to which the environment responds by now
     making two requests in the second round.
 
-    Eventually, the refinements to the environment's candidate will force the
-    controller to grant more resources and result in a game tree such as in
-    Figure~\ref{fig:refined}.
+    When the environment cannot refine the tree by extending existing branches, it backtracks 
+    and creates new branches.
+    Eventually, we obtain the abstract game tree shown in Figure~\ref{fig:refined} for which 
+    there does not exist a winning partial strategy on behalf of the controller.  We conclude that 
+    the game is winning for the environment.
+
+%    Eventually, the refinements to the environment's candidate will force the
+%    controller to grant more resources and result in a game tree such as in
+%    Figure~\ref{fig:refined}.
     
+
 \end{exmpI}
 
 
@@ -498,6 +519,19 @@ to the leaf.
     \label{alg:bounded}
 \end{algorithm}
 
+The full bounded synthesis algorithm is more complicated: upon finding a candidate 
+partial strategy on behalf of player $p$ against abstract game tree $T$, it first checks whether the strategy is winning 
+against $T$.  By only considering such strong candidates, we reduce the number of 
+refinements needed to solve the game.  To this end, the algorithm checks whether each 
+outcome of the candidate strategy is a winning state for $\textsc{opponent}(p)$ by recursively 
+invoking the synthesis algorithm on behalf of the opponent.  Thus, our bounded
+synthesis algorithm can be seen as running two competing solvers, for the
+controller and for the environment. 
+
+%The solvers build candidate partial strategy 
+%for their corresponding players, which are used to refine the abstractions.
+
+
 The full procedure is illustrated in Algorithm~\ref{alg:bounded}.  The
 algorithm takes a concrete game $G$ with maximum bound $\kappa$ as an implicit
 argument.  In addition, it takes a player $p$ (controller or environment),
@@ -513,15 +547,15 @@ The algorithm is organised as a counterexample-guided abstraction refinement
 (CEGAR) loop.  The first step of the algorithm uses the \textsc{findCandidate}
 function, described below, to come up with a candidate partial strategy that is
 winning when the opponent is restricted to $T$.  If it fails to find a
-strategy, this means that no winning strategy exists against the opponent
-playing its partial strategy represented by $T$.  If, on the other hand, a
+strategy, this means that no winning partial strategy exists against the opponent
+playing according to $T$.  If, on the other hand, a
 candidate partial strategy is found, we need to verify if it is indeed winning
 for the abstract game $T$.
 
 The \textsc{verify} procedure searches for a \emph{spoiling} counterexample
 strategy in each leaf of the candidate partial strategy by calling
 \textsc{solveAbstract} for the opponent. The dual solver solves games on behalf
-of the controller player.  
+of the opponent player.  
 
 If the dual solver can find no spoiling strategy at any of the leaves, then the
 candidate partial strategy is a winning one. Otherwise, \textsc{verify} returns
@@ -624,7 +658,7 @@ winning as long as the game does not extend beyond the maximum bound.
 
 It is possible to set a maximum bound such that all runs in the unbounded game will be
 considered. The na\"ive approach is to use size of the state space as the bound
-($2^{|X|}$) so that all states may be explored by the algorithm. A more nuanced
+(${|\mathcal{X}|}$) so that all states may be explored by the algorithm. A more nuanced
 approach is to use the diameter of the game \cite{biere1999}, which is the
 smallest number $d$ such that for any state $x$ there is a path of length $\leq
 d$ to all other reachable states. However, the diameter is difficult to
@@ -810,10 +844,9 @@ controller or environment losing states respectively
     (\texttt{nrequests} = 1 \land (\texttt{resource0} = 0 \land
     \texttt{resource1} = 0))$.  In the general case there is no compact
     representation of the losing set, so we try to avoid computing it by
-    employing interpolation instead. The potential benefit of interpolation is
-    that an interpolant can approximate the losing states in such a way that
-    there is just enough information to prove realisability. It is also cheap
-    to compute an interpolant using a SAT solver.
+    employing interpolation instead. The benefit of interpolation is
+    that it allows approximating the losing states efficiently by obtaining 
+    an interpolant from a SAT solver.
 \end{exmpInt}
 
 
