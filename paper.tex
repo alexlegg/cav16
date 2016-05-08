@@ -300,22 +300,22 @@ edge connecting $n$ and $n'$.
                         }
                         node [left=4pt] {\texttt{req=1}}
                     }
-                node [left=4pt] {\texttt{gr0=0 gr1=0}}
+                node [left=4pt] {\texttt{gr0=1 gr1=0}}
                 }
                 node [left=4pt] {\texttt{req=1}}
                 node [above=4pt] {$\langle s, 3 \rangle$};
         \end{tikzpicture}
     \end{minipage}
-        \caption{Environment winning trace}
+        \caption{Controller winning trace}
         \label{fig:trace}
     \end{subfigure}
-    \begin{subfigure}[t]{.15\textwidth}
+    \begin{subfigure}[t]{.2\textwidth}
         \centering
         \begin{minipage}[t][3.8cm][t]{\textwidth}
         \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm,baseline]
             \node [circle,draw] (root){}
                 child {node [circle,draw] {}
-                    edge from parent [fixed] node [left] {\texttt{req=1}}
+                    edge from parent [fixed] node [left] {\texttt{gr0=1 gr1=0}}
                 }
                 node [left=4pt] {}
                 node [above=4pt] {$\langle s, 3 \rangle$};
@@ -342,38 +342,14 @@ edge connecting $n$ and $n'$.
                         }
                         node [left=4pt] {\texttt{req=1}}
                     }
-                node [left=4pt] {\texttt{gr0=1 gr1=1}}
+                node [left=4pt] {\texttt{gr0=1 gr1=0}}
                 }
-                node [left=4pt] {\texttt{req=1}}
+                node [left=4pt] {\texttt{req=2}}
                 node [above=4pt] {$\langle s, 3 \rangle$};
         \end{tikzpicture}
         \end{minipage}
-        \caption{Controller winning trace}
+        \caption{Environment winning trace}
         \label{fig:trace2}
-    \end{subfigure}
-    \begin{subfigure}[t]{.15\textwidth}
-        \centering
-        \begin{minipage}[t][3.8cm][t]{\textwidth}
-        \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm,baseline]
-            \node [circle,draw] (root){}
-                child {node [circle,draw] {}
-                    child {node [circle,draw] {}
-                        % node [left=4pt] {\texttt{gr0=1 gr1=0}}
-                        edge from parent [fixed] node [left] {\texttt{req=2}}
-                    }
-                    % node [left=4pt] {\texttt{gr0=0 gr1=1}}
-                    edge from parent [fixed] node [left] {\texttt{req=1}}
-                }
-%%%                child {node [circle,draw] {}
-%%%                    node [left=4pt] {\texttt{req=1}}
-%%%                    edge from parent [fixed] node [right] {\texttt{gr=1}}
-%%%                }
-                node [left=4pt] {}
-                node [above=4pt] {$\langle s, 3 \rangle$};
-        \end{tikzpicture}
-        \end{minipage}
-        \caption{AGT}
-        \label{fig:agt2}
     \end{subfigure}
     \begin{subfigure}[t]{.2\textwidth}
         \centering
@@ -381,32 +357,19 @@ edge connecting $n$ and $n'$.
         \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm,baseline]
             \node [circle,draw] (root){}
                 child {node [circle,draw] {}
-                    child {node [circle,draw] {}
-                        child {node [circle,draw] {}
-                            edge from parent [fixed] node [right] {\texttt{req=2}}
-                        }
-                        edge from parent [fixed] node [right] {\texttt{req=2}}
-                    }
-                    edge from parent [fixed] node [left] {\texttt{req=1}}
+                    edge from parent [fixed] node [left] {\texttt{gr0=1 gr1=0}}
                 }
-                child {node [circle,draw] {}
-                    child {node [circle,draw] {}
-                        child {node [circle,draw] {}
-                            edge from parent [fixed] node [right] {\texttt{req=2}}
-                        }
-                        edge from parent [fixed] node [right] {\texttt{req=2}}
-                    }
-                    edge from parent [fixed] node [right] {\texttt{req=2}}
-                }
+                node [left=4pt] {\texttt{req=2}}
                 node [above=4pt] {$\langle s, 3 \rangle$};
         \end{tikzpicture}
         \end{minipage}
-        \caption{Refined AGT}
-        \label{fig:refined}
+        \caption{Partial Strategy}
+        \label{fig:strategy}
     \end{subfigure}
     \caption{Abstract game trees.}
     \label{fig:alltrees}
 \end{figure}
+
 
 Given an environment (controller) abstract game tree $T$ a \emph{partial
 strategy} $Strat: \textsc{nodes}(T) \rightarrow \mathcal{C}$ ($Strat: \textsc{nodes}(T)
@@ -428,43 +391,119 @@ in the concrete game.
 
     %% Make it clear that this is intuition only
     We present the intuition behind our bounded synthesis method by applying
-    its \emph{simplified version} to the running example.
-    We begin by finding 
-    a trace of length $k$ (here we consider $k=3$) that is winning for the environment, 
-    i.e., that starts from the initial state and reaches an
-    error state (see Figure~\ref{fig:trace}).  We use a SAT solver to find such a trace,
-    precisely as one would do in bounded model checking.
-    Given this trace we make an initial
-    conjecture that any trace starting with action \texttt{req=1} is winning for the
-    environment. This conjecture is captured in the abstract game tree shown in
-    Figure~\ref{fig:agt}.  We validate this conjecture by searching for a counterexample
-    trace that avoids the error state with the
-    first environment action fixed to \texttt{req=1}.   
-    Such a trace, that refutes the conjecture, is shown in Figure~\ref{fig:trace2}. 
-    In this trace, the controller wins by responding with \texttt{gr0=1, gr1=1} in the first round.
-    This move represents controller's partial strategy against the 
-    abstract game tree in Figure~\ref{fig:agt}.  This partial strategy is shown in Figure~\ref{}.
+    its \emph{simplified version} to the running example.  We begin by finding
+    a trace of length $k$ (here we consider $k=3$) that is winning for the
+    controller, i.e., that starts from the initial state and avoids the error
+    set for three game rounds (see Figure~\ref{fig:trace}).  We use a SAT
+    solver to find such a trace, precisely as one would do in bounded model
+    checking.  Given this trace we make an initial conjecture that any trace
+    starting with action \texttt{gr0=1 gr1=0} is winning for the controller.
+    This conjecture is captured in the abstract game tree shown in
+    Figure~\ref{fig:agt}.  We validate this conjecture by searching for a
+    counterexample trace that reaches an error state with the first controller
+    action fixed to \texttt{gr0=1 gr1=0}.   Such a trace, that refutes the
+    conjecture, is shown in Figure~\ref{fig:trace2}.  In this trace, the
+    environment wins by playing \texttt{req=2} in the first round.  This move
+    represents the environment's partial strategy against the abstract game
+    tree in Figure~\ref{fig:agt}.  This partial strategy is shown in
+    Figure~\ref{fig:strategy}.
     
     Next we strengthen the abstract game tree taking this partial strategy into account.
-    To this end we again use a SAT solver to find a trace where the environment wins while
-    the controller plays according to the partial strategy.  In the resulting trace (now shown), 
-    the environment plays \texttt{req=2} in the second round.  We refine the abstract game tree
-    using this move as shown in Figure~\ref{fig:agt2}.  The controller's partial strategy was to grant two
-    resources in the first round, to which the environment responds by now
-    making two requests in the second round.
+    To this end we again use a SAT solver to find a trace where the contoller
+    wins while the environment plays according to the partial strategy.  In the
+    resulting trace (Figure~\ref{fig:trace3}), the controller plays \texttt{gr0=1 gr1=1} in
+    the second round.  We refine the abstract game tree using this move as
+    shown in Figure~\ref{fig:refined1}.  The environment's partial strategy was
+    to make two requests in the first round, to which the controller responds
+    by now granting an additional two resources in the second round.
 
-    When the environment cannot refine the tree by extending existing branches, it backtracks 
-    and creates new branches.
-    Eventually, we obtain the abstract game tree shown in Figure~\ref{fig:refined} for which 
-    there does not exist a winning partial strategy on behalf of the controller.  We conclude that 
-    the game is winning for the environment.
-
-%    Eventually, the refinements to the environment's candidate will force the
-%    controller to grant more resources and result in a game tree such as in
-%    Figure~\ref{fig:refined}.
-    
+    When the controller cannot refine the tree by extending existing branches,
+    it backtracks and creates new branches. Eventually, we obtain the abstract
+    game tree shown in Figure~\ref{fig:refined2} for which there does not exist
+    a winning partial strategy on behalf of the environment.  We conclude that
+    the bounded game is winning for the controller.
 
 \end{exmpI}
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[t]{.2\textwidth}
+        \centering
+        \begin{minipage}[t][3.8cm][t]{\textwidth}
+        \begin{tikzpicture}[level distance = 5mm,baseline]
+            \node [circle,draw,inner sep=1pt] (root){}
+                child {node [circle,draw,inner sep=1pt] {}
+                    child {node [circle,draw,inner sep=1pt] {}
+                        child {node [circle,draw,inner sep=1pt] {}
+                            child {node [circle,draw,inner sep=1pt] {}
+                                child {node [circle,draw,inner sep=1pt] {}
+                                    node [left=4pt] {\texttt{gr0=0 gr1=0}}
+                                }
+                                node [left=4pt] {\texttt{req=1}}
+                            }
+                            node [left=4pt] {\texttt{gr0=1 gr1=1}}
+                        }
+                        node [left=4pt] {\texttt{req=1}}
+                    }
+                node [left=4pt] {\texttt{gr0=1 gr1=0}}
+                }
+                node [left=4pt] {\texttt{req=2}}
+                node [above=4pt] {$\langle s, 3 \rangle$};
+        \end{tikzpicture}
+        \end{minipage}
+        \caption{Controller winning trace}
+        \label{fig:trace3}
+    \end{subfigure}
+    \begin{subfigure}[t]{.3\textwidth}
+        \centering
+        \begin{minipage}[t][3.8cm][t]{\textwidth}
+        \hspace*{0.8cm}
+        \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm,baseline]
+            \node [circle,draw] (root){}
+                child {node [circle,draw] {}
+                    child {node [circle,draw] {}
+                        edge from parent [fixed] node [left] {\texttt{gr0=1 gr1=1}}
+                    }
+                    edge from parent [fixed] node [left] {\texttt{gr0=1 gr1=0}}
+                }
+                node [above=4pt] {$\langle s, 3 \rangle$};
+        \end{tikzpicture}
+        \end{minipage}
+        \caption{First refined AGT}
+        \label{fig:refined1}
+    \end{subfigure}
+    \begin{subfigure}[t]{.4\textwidth}
+        \centering
+        \begin{minipage}[t][3.8cm][t]{\textwidth}
+        \begin{tikzpicture}[dash pattern = on 2pt off 2pt, level distance = 10mm,baseline]
+            \node [circle,draw] (root){}
+                child {node [circle,draw] {}
+                    child {node [circle,draw] {}
+                        child {node [circle,draw] {}
+                            edge from parent [fixed] node [left] {\texttt{gr0=1 gr1=1}}
+                        }
+                        edge from parent [fixed] node [left] {\texttt{gr0=1 gr1=1}}
+                    }
+                    edge from parent [fixed] node [left] {\texttt{gr0=1 gr1=0}}
+                }
+                child {node [circle,draw] {}
+                    child {node [circle,draw] {}
+                        child {node [circle,draw] {}
+                            edge from parent [fixed] node [right] {\texttt{gr0=1 gr1=1}}
+                        }
+                        edge from parent [fixed] node [right] {\texttt{gr0=1 gr1=1}}
+                    }
+                    edge from parent [fixed] node [right] {\texttt{gr0=1 gr1=1}}
+                }
+                node [above=4pt] {$\langle s, 3 \rangle$};
+        \end{tikzpicture}
+        \end{minipage}
+        \caption{Final Refined AGT}
+        \label{fig:refined2}
+    \end{subfigure}
+    \caption{Refined abstract game trees.}
+    \label{fig:refinedtrees}
+\end{figure}
 
 
 \begin{algorithm}[t]
