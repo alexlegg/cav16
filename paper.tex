@@ -1179,32 +1179,35 @@ The implementation of our algorithm uses \textsc{Glucose}~\cite{audemard2014}
 for SAT solving and \textsc{Periplo}~\cite{rollini2013} for interpolant
 generation. We intend to open source the tool for SYNTCOMP'16. The benchmarks
 were run on a cluster of Intel Quad Core Xeon E5405 2GHz CPUs with 16GB of
-memory.  The solver was allowed exclusive access to a node for one hour to
-solve an instance.
+memory.  The solvers were allowed exclusive access to a node for one hour to
+solve an instance. 
 
 The results of our benchmarking are shown, along with the synthesis competition
 results~\cite{syntcompedacc}, in Table~\ref{tab:syntcomp}. The competition was
 run on Intel Quad Core 3.2Ghz CPUs with 32GB of memory, also on isolated nodes
-for one hour per instance. The unique column lists the number of instances that
-only that tool could solve in the competition (excluding our solver). In
-brackets is the number of instances that only that tool could solve, including
-our solver.
+for one hour per instance. The competition results differ significantly from
+our own benchmarks due to this more powerful hardware.  For our benchmarks we
+report only the results for solvers we were able to run on our cluster. The
+unique column lists the number of instances that only that tool could solve in
+the competition (excluding our solver). In brackets is the number of instances
+that only that tool could solve, including our solver.
 
 \begin{table}
     \centering
     \setlength{\tabcolsep}{8pt}
-    \begin{tabular}{l | r | r }
-        \textbf{Solver} & \textbf{Solved} & \textbf{Unique} \\
+    \begin{tabular}{l | r | r | r }
+        \textbf{Solver} & \textbf{Solved} & \textbf{Solved} & \textbf{Unique} \\
+                        & \textbf{(Competition)} & \textbf{(Benchmarks)} & \\
         \hline
-        Simple BDD Solver (2) & 195 & 10 \textit{(6)} \\
-        AbsSynthe (seq2) & 187 & 2 \\
-        Simple BDD Solver (1) & 185 & \\
-        AbsSynthe (seq3) & 179 & \\
-        Realizer (sequential) & 179 & \\
-        AbsSynthe (seq1) & 173 & 1 \\
-        Demiurge (D1real) & 139 & 5 \textit{(2)} \\
+        Simple BDD Solver (2) & 195 & 189 & 10 \textit{(6)} \\
+        AbsSynthe (seq2) & 187 & 139 & 2 \\
+        Simple BDD Solver (1) & 185 & 175 & \\
+        AbsSynthe (seq3) & 179 & 134 & \\
+        Realizer (sequential) & 179 & & \\
+        AbsSynthe (seq1) & 173 & 139 & 1 \\
+        Demiurge (D1real) & 139 & 136 & 5 \textit{(2)} \\
         Aisy & 98 & \\
-        \textit{Unbounded Synthesis} & \textit{103} & \textit{12} \\
+        \textit{Unbounded Synthesis} & & \textit{103} & \textit{12} \\
     \end{tabular}
     \caption{Synthesis Competition 2015 Results}
     \label{tab:syntcomp}
@@ -1235,12 +1238,12 @@ another five are from the \texttt{stay} family. This supports the hypothesis
 that different game solving methodologies perform better on certain classes of
 specifications.
 
-We also present a cactus plot of the number of instances solved over time (Figure~\ref{fig:cactus}). For
-reference we plotted our results along with \textsc{Demiurge}~\cite{bloem2014},
-the only SAT-based tool in the competition, the winner of the sequential
-realisability track \textsc{Simple BDD Solver 2}~\cite{walker2014}, and
-AbsSynthe (seq3) \cite{brenguier2014}. Our results differ from the competition,
-we suspect due to the weaker hardware.
+We also present a cactus plot of the number of instances solved over time
+(Figure~\ref{fig:cactus}). We have plotted the best configuration of each
+solver we benchmarked. The solvers shown are
+\textsc{Demiurge}~\cite{bloem2014}, the only SAT-based tool in the competition,
+the winner of the sequential realisability track \textsc{Simple BDD Solver
+2}~\cite{walker2014}, and AbsSynthe (seq3) \cite{brenguier2014}.
 
 \begin{figure}[h]
     \centering
@@ -1283,8 +1286,8 @@ we suspect due to the weaker hardware.
         \end{scope}
 
     \end{tikzpicture}
-    \caption{Number of instances solver over time by the unbounded solver, Demiurge,
-    and Simple BDD Solver.}\label{fig:cactus}
+    \caption{Number of instances solved over time.}
+    \label{fig:cactus}
 \end{figure}
 
 Whilst our solver is unable to solve as many instances as other tools, it was
